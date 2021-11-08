@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>
+        var myCanvas, myCtx; 
+        var startX, startY, endX, endY;//선의 시작과 끝
+
+        function startLine(){
+            inCanvas = document.getElementById('inCanvas'); //도화지에 접근
+            inCtx = inCanvas.getContext('2d'); // 물감 , 붓이 들은 통 
+            //캔버스에 이벤트 리스너를 장착 (마우스 다운 ,업)
+            inCanvas.addEventListener("mousedown",__downMouse, false);
+            inCanvas.addEventListener("mouseup",__upMouse, false);
+        }
+
+        function stopLine(){
+            inCanvas.removeEventListener("mousedown",__downMouse, false);
+            inCanvas.removeEventListener("mouseup",__upMouse, false);
+        }
+
+        function __downMouse(e){
+            startX = e.offsetX;
+            startY = e.offsetY;
+            // alert(startX);
+        }
+
+        function __upMouse(e) {
+            endX = e.offsetX;
+            endY = e.offsetY;
+            inCtx.beginPath()
+            inCtx.strokeStyle = "red";
+            inCtx.lineWidth = 10;
+            inCtx.moveTo(startX, startY);
+            inCtx.lineTo(endX, endY);
+            inCtx.stroke(); //선 표시
+            inCtx.closePath();
+        }
+    </script>
+    <script> //영상처리 함수부
+    function selectAlgorithm(selectNum) {
+            var slec = document.getSelection 
+            switch (parseInt(selectNum.value)) {  // 101, 102 ......
+                case 101 : // 동일 영상
+                    equalImage(); 
+                    break;
+                case 102 : // 밝게 어둡게
+                    addImage();
+                    break;     
+                case 103 : // 그레이스케일
+                    grayImage();
+                    break;   
+                case 104 : // 흑백 (마우스)
+                    grayImage();
+                    break; 
+                
+            }
+        }
+    var startX, startY, endX, endY;//선의 시작과 끝
+    function bwImage_mouse(){
+        inCanvas.addEventListener("mousedown",__downMouse, false);
+        inCanvas.addEventListener("mouseup",__upMouse, false);
+        
+        function __downMouse(e){
+            startX = e.offsetX;
+            startY = e.offsetY;
+            // alert(startX);
+        }
+    }
+    </script>
+</head>
+<body>
+    <form>
+        <!-- input type ='file' id='inFile' onchange="loadImage()" /> <br> -->
+        <input type ='number' id='fileNum' value="01" /> 
+        <input type ='button' id='inFile' value="이미지 열기" onclick="loadImage()" />  <br> -->
+        <label> 칼라 영상처리 Beta 1</label>
+        <select name='imageAlgo' onchange="selectAlgorithm(this.form.imageAlgo)">
+            <option selected>--선택 하세요 --</option>
+            <optgroup label="화소점 처리">
+                <option value=101> 동일 영상 처리 </option>
+                <option value=102> 영상 밝게/어둡게 </option>
+                <option value=103> 그레이 스케일 변환 </option>
+                <option value=104> 흑백</option>
+            </optgroup>        
+        </select>
+    </form>
+    <br>
+    <input type="button" value="선 그리기 시작" id ='lineStart' onclick="startLine()"/>
+    <input type="button" value="선 그리기 끝" id ='lineStop' onclick="stopLine()"/>
+    <br>
+    <canvas id='inCanvas' style="background-color:rgb(144, 219, 219)" width="500" height="500"></canvas>
+    
+</body>
+</html>
