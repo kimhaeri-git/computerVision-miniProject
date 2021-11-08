@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+       window.onload = function(event){
+            document.getElementById("clickme").onclick = function(){
+                var pickColor = document.querySelector('input[name="pickColor"]:checked').value;
+                window.opener.document.getElementById("pInput").innerText = pickColor;
+                window.close();
+            }
+       }
+    </script>
+</head>
+<body>
+    <form>
+        <p>-- 색상을 선택하세요 --</p>
+        <input type="radio" id="pickColor" name="pickColor" value="red">
+        <label for="red">빨강</label>
+        <input type="radio" id="pickColor" name="pickColor" value="orange">
+        <label for="orange">오렌지</label>
+        <input type="radio" id="pickColor" name="pickColor" value="yellow">
+        <label for="yellow">노랑</label>
+        <input type="radio" id="pickColor" name="pickColor" value="green">
+        <label for="green">초록</label>
+        <input type="radio" id="pickColor" name="pickColor" value="blue">
+        <label for="blue">파랑</label>
+        <input type="radio" id="pickColor" name="pickColor" value="purple">
+        <label for="purple">보라</label><br>
+        <!-- <input type="submit" value="전달하기" > -->
+        <input type="button" id="clickme" value="전달하기" >
+    </form>
+</body>
+</html>

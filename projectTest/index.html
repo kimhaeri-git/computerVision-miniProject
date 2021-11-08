@@ -1,0 +1,3003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Nano Folio - Simple HTML Template</title>
+	<link rel="stylesheet" href="fontawesome/css/all.min.css"> <!-- https://fontawesome.com/ -->
+	<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap" rel="stylesheet"> <!-- https://fonts.google.com/ -->
+	<link href="css/magnific-popup.min.css" rel="stylesheet">
+    <link href="css/tooplate-style.css" rel="stylesheet">
+	<style>
+		#fileNum{
+			border: 2px solid #8DD8FF;
+			width: 200px;
+			color: black;
+			font-weight: bolder;
+			border-radius: 5px;
+			padding: 5px;
+			margin-left: 20px;
+	
+		}
+		#inFile{
+			width: 100px;
+			color: black;
+			background-color: #F96699;
+			border-radius: 5px;
+			padding: 5px;
+			margin-left: 20px;
+			
+		}
+		select{
+			border: 2px solid #F96699;
+			height: 30px;
+		}
+
+		.rangediv{
+			display: none ;
+			margin: 0;
+			padding: 0;
+			width: 100%;
+			/* display: flex; */
+		}
+		.rangediv > span{
+			width: 10%;
+			float:left;
+		}
+		.range{
+			width: 50%;	
+		}
+		
+	
+	
+
+	</style>
+	<script>  // 전역 변수부 (*중요*)
+        var inCanvas, inCtx, inPaper, outCanvas, outCtx, outPaper; // 화면용
+        var inImage, inH, inW, outImage, outH, outW; // 핵심 변수들
+        var inFile;
+    </script>
+	<script>// 공통 함수부
+		// 초기화 함수
+        function init() {
+            inCanvas = document.getElementById('inCanvas'); // 도화지에 접근
+            inCtx = inCanvas.getContext('2d'); // 물감,붓이 들은 통
+            outCanvas = document.getElementById('outCanvas'); // 도화지에 접근
+            outCtx = outCanvas.getContext('2d'); // 물감,붓이 들은 통
+        }
+
+		function loadImage() {
+            //inFile = document.getElementById('inFile').files[0]; // 선택한 칼라 파일
+            var fileNum = document.getElementById('fileNum').value;
+            var inFileName = "Nature99(Small)/picture" + fileNum + ".jpg";
+            // 그림 파일 --> 이미지 객체
+            var inPicture = new Image(); // 빈 이미지 객체 생성
+            inPicture.src = inFileName;
+            inPicture.onload = function () { // 익명함수
+                // *중요* 입력 파일 크기 파악
+                inH = inPicture.height;
+                inW = inPicture.width;
+                outH = inH;
+                outW = inW;
+
+                // 캔버스 크기 조절
+                inCanvas.height = inH;
+                inCanvas.width = inW;
+                inCtx.drawImage(inPicture, 0, 0, inW, inH);
+
+                // 입력용 4차원 배열 메모리 할당
+                inImage = new Array(4); // 4장짜리 배열(R,G,B,Alpha)
+                outImage = new Array(4); // 4장짜리 배열(R,G,B,Alpha)
+                for (var i = 0; i < 4; i++) {
+                    inImage[i] = new Array(inH);
+                    outImage[i] = new Array(inH);
+                    for (var k = 0; k < inH; k++) {
+                        inImage[i][k] = new Array(inW);
+                        outImage[i][k] = new Array(inW);
+                    }
+                }
+
+                // *중요* 캔버스 --> 배열로 칼라색상 추출
+                var colorBlob = inCtx.getImageData(0, 0, inW, inH); // 주의!
+                var R, G, B, Alpha;
+                var n = 0;
+                for (var i = 0; i < inH; i++) {
+                    for (var k = 0; k < inW; k++) {
+                        //var px = (i*inW + k) * 4; // 1픽셀=4Byte
+                        var px = n * 4; // 1픽셀=4Byte
+                        R = colorBlob.data[px + 0];
+                        G = colorBlob.data[px + 1];
+                        B = colorBlob.data[px + 2];
+                        Alpha = colorBlob.data[px + 3];
+                        inImage[0][i][k] = R;
+                        inImage[1][i][k] = G;
+                        inImage[2][i][k] = B;
+                        inImage[3][i][k] = Alpha;
+                        outImage[0][i][k] = R;
+                        outImage[1][i][k] = G;
+                        outImage[2][i][k] = B;
+                        outImage[3][i][k] = Alpha;
+                        n++;
+                    }
+                }
+            }
+        }
+
+        // var hop = 1; // 몇배 건너뛰면서 출력할 변수
+
+		//이미지 출력
+        function displayImage() {
+            outCanvas.height = outH;
+            outCanvas.width = outW;
+            outPaper = outCtx.createImageData(outW, outH);
+            var n = 0;
+            for (var i = 0; i < outH; i++) {
+                for (var k = 0; k < outW; k++) {
+                    try{
+
+                        var R = outImage[0][i][k];
+                        var G = outImage[1][i][k];
+                        var B = outImage[2][i][k];
+                        var Alpha = outImage[3][i][k];
+                        outPaper.data[n * 4 + 0] = R; //Red
+                        outPaper.data[n * 4 + 1] = G; //Green
+                        outPaper.data[n * 4 + 2] = B; //Blue
+                        outPaper.data[n * 4 + 3] = Alpha; //Alpha 투명도(0(투명)~255(불투명))
+                        n++;
+                    }catch(e){
+
+                    }
+                }
+            }
+            outCtx.putImageData(outPaper, 0, 0); //이미지 화면 출력(inPaper,x,y)
+        }
+
+		function displayImageA() {
+            outCanvas.height = outH;
+            outCanvas.width = outW;
+            outPaper = outCtx.createImageData(outW, outH);
+            var n = 0;
+            for (var i = 0; i < outH; i++) {
+                for (var k = 0; k < outW; k++) {
+                    var R = outImage[0][i][k];
+                    var G = outImage[1][i][k];
+                    var B = outImage[2][i][k];
+                    // console.log(i,k,R,G,B);
+                    // var Alpha = outImage[3][i][k];
+                    outPaper.data[n * 4 + 0] = R; //Red
+                    outPaper.data[n * 4 + 1] = G; //Green
+                    outPaper.data[n * 4 + 2] = B; //Blue
+                    outPaper.data[n * 4 + 3] = 255; //Alpha 투명도(0(투명)~255(불투명))
+                    n++;
+                }
+            }
+            outCtx.putImageData(outPaper, 0, 0); //이미지 화면 출력(inPaper,x,y)
+        }
+
+
+	</script>
+	<script>// 영상처리 함수부
+		function selectAlgorithm(selectNum) {
+			console.log(selectNum.value);
+            switch (parseInt(selectNum.value)) {  // 101, 102 ......
+                case 101: // 동일 영상
+                    equalImage();
+                    break;
+                case 102: // 밝게 어둡게
+                    addImage();
+                    break;
+                case 103: // 그레이스케일
+                    grayImage();
+                    break;
+                case 104: // #흑백 (마우스-사각형)
+                    bwImage_mouse();
+                    break;
+                case 105: // 흑백 (입력값)
+                    inputbkImage();
+                    break;
+                case 106: // 흑백 (평균값)
+                    avgblackImage();
+                    break;
+                case 107: // 흑백 (중앙값)
+                    centbkImage();
+                    break;
+                case 108: // 흑백 (127)
+                    numbkImage();
+                    break;
+                case 109: // 파라볼라(cap)
+                    paraCap();
+                    break;
+                case 110: // 감마보정
+                    gammaImg();
+                    break;
+                case 111: // 화소처리(AND 프로그램)
+                    andImage();
+                    break;
+                case 112: // 화소처리(OR 프로그램)
+                    orImage();
+                    break;
+                case 113: // 화소처리(XOR 프로그램)
+                    xorImage();
+                    break;
+                case 114: // 투명도 주기 (Alpha)
+                    alphaImage();
+                    break;
+                case 115: // 범위 강조 변환
+                    stressImage();
+                    break;
+                case 201: // 축소하기
+                    zoomOut();
+                    break;
+                case 202: // 확대하기
+                    zoomIn();
+                    break;
+                case 203: // 양선형 보간법
+                    biLinear();
+                    break;
+                case 204: // ##흑백 (마우스 - 다각형)
+                    reverseImage_free_mouse();
+                    break;
+                case 205: // 색상 추출하기
+                    pickOrange();
+                    break;
+                case 206: // 채도 낮추기
+                    changeSaturation();
+                    break;
+                case 207: // 명도 조절 [밝게 조절]
+                    changeBrighteness();
+                    break;
+                case 208: // 미러링 하기
+                    mirImage();
+                    break;
+                case 301: // 히스토그램 스트레칭
+                    histoStretch();
+                    break;
+                case 302: // 엔드인 탐색
+                    endInSearch();
+                    break;
+                case 303: // 평활화
+                    histoEqual();
+                    break;
+                case 304: // 90도 회전
+                    rotateNine();
+                    break;
+                case 305: // 회전[자유각도]
+                    rotateNum();
+                    break;
+                case 401: //엠보싱
+                    embossing();
+                    break;
+                case 402: //이동과 차분 처리
+					diffOpHor();
+                    break;
+                case 403: //경계선
+                    edge1();
+                    break;
+                case 404: //유사 연산자
+                    homogenOperator();
+                    break;
+                case 405: //차 연산자 
+                    diffOperator();
+                    break;
+                case 406: //LoG
+                    loGImage();
+                    break;
+                case 407: //DoG
+                    doGImage();
+                    break;
+                case 408: ///블러링(원본)
+					blurring();
+                    break;
+				case 409: //블러링(진하기)
+                    blurrOperator();
+                    break;
+                case 410: //sharpening
+                    sharpening();
+                    break;
+                case 411: //가우시안 필터
+                    gaussianFilter();
+                    break;
+                case 412: //저주파 필터 샤프닝 
+                    lpfSharp();
+                    break;
+            }
+        }
+
+		// 101 . 동일 영상처리
+		function equalImage() {
+
+			// *** 영상 처리 알고리즘 ***
+			for (var rgb = 0; rgb < 4; rgb++) {
+				for (var i = 0; i < inH; i++) {
+					for (var k = 0; k < inW; k++) {
+						outImage[rgb][i][k] = inImage[rgb][i][k];
+					}
+				}
+			}
+		displayImage();
+		}
+
+		
+		// 102 밝게/어둡게
+		function addImage() {
+			// *** 영상 처리 알고리즘 ***
+			document.getElementById("rangediv").style.display = "block";
+			document.getElementById("addrange").style.display = "block";
+
+			// var value = parseInt(prompt("숫자를 입력:", "100"));
+			var value = parseInt(document.getElementById('addrange').value);
+			
+			
+			for (var rgb = 0; rgb < 4; rgb++) {
+				for (var i = 0; i < inH; i++) {
+					for (var k = 0; k < inW; k++) {
+						// 문자 --> 숫자
+						var pixel = inImage[rgb][i][k];
+						// ** 진짜 핵심 알고리즘
+						if (pixel + value > 255)
+						pixel = 255;
+						else if (pixel + value < 0)
+						pixel = 0;
+						else
+						pixel += value;
+						// 숫자 --> 문자
+						outImage[rgb][i][k] = pixel;
+						// console.log(pixel);
+					}
+				}
+			}
+		displayImage();
+	}
+
+		//103. 그레이스케일
+		function grayImage() {
+			document.getElementById("rangediv").style.display = "none";
+            // *** 영상 처리 알고리즘 ***
+            for (var i = 0; i < outH; i++) {
+                for (var k = 0; k < outW; k++) {
+                    var R = outImage[0][i][k];
+                    var G = outImage[1][i][k];
+                    var B = outImage[2][i][k];
+                    var Alpha = inImage[3][i][k];
+
+                    // console.log(R);
+                    var pixel = Math.floor((R + G + B) / 3.0);
+
+                    outImage[0][i][k] = outImage[1][i][k] = outImage[2][i][k] = pixel;
+                }
+            }
+
+            displayImage();
+        }
+		//104. #흑백 (마우스-사각형)
+		var startX, startY, endX, endY;
+        function bwImage_mouse() {
+			document.getElementById("rangediv").style.display = "none";
+            inCanvas.addEventListener("mousedown", __downMouse, false);
+            inCanvas.addEventListener("mouseup", __upMouse, false);
+            function __downMouse(e) {
+                startX = e.offsetX;
+                startY = e.offsetY;
+            }
+            function __upMouse(e) {
+                endX = e.offsetX;
+                endY = e.offsetY;
+                if (startX > endX) {
+                    var tmp = startX; startX = endX; endX = tmp;
+                }
+                if (startY > endY) {
+                    var tmp = startY; startY = endY; endY = tmp;
+                }
+                // 네모 치기
+                inCtx.beginPath()
+                inCtx.strokeStyle = 'red';
+                inCtx.lineWidth = 1;
+                inCtx.rect(startX, startY, (endX - startX), (endY - startY));
+                inCtx.stroke(); // 선 표시되게 하기
+                inCtx.closePath();
+                inCanvas.removeEventListener("mousedown", __downMouse, false);
+                inCanvas.removeEventListener("mouseup", __upMouse, false);
+                __bwImage();
+            }
+            function __bwImage() {
+
+                // *** 영상 처리 알고리즘 ***
+                for (var i = 0; i < outH; i++) {
+                    for (var k = 0; k < outW; k++) {
+
+                        // 선택한 범위 안에만 처리
+                        if ((startX <= k && k <= endX) && (startY <= i && i <= endY)) {
+                            // 문자 --> 숫자
+                            var R = outImage[0][i][k];
+                            var G = outImage[1][i][k];
+                            var B = outImage[2][i][k];
+                            var pixel = Math.floor((R + G + B) / 3.0);
+                            // ** 진짜 핵심 알고리즘
+                            if (pixel > 127)
+                                pixel = 255;
+                            else
+                                pixel = 0;
+                            // 숫자 --> 문자
+                            outImage[0][i][k] = pixel;
+                            outImage[1][i][k] = pixel;
+                            outImage[2][i][k] = pixel;
+                        } else {
+                            outImage[0][i][k] = inImage[0][i][k];
+                            outImage[1][i][k] = inImage[1][i][k];
+                            outImage[2][i][k] = inImage[2][i][k];
+
+                        }
+
+                    }
+                }
+                displayImage();
+            }
+        }
+
+		//105. 흑백 (입력값)
+		function inputbkImage() {
+			document.getElementById("rangediv").style.display = "block";
+            document.getElementById("bkrange").style.display = "block";
+
+			// var value = parseInt(prompt("숫자를 입력:", "100"));
+			var value = parseInt(document.getElementById('bkrange').value);
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for (var i = 0; i < inH; i++) {
+                    for (var k = 0; k < inW; k++) {
+                        var R = inImage[0][i][k];
+                        var G = inImage[1][i][k];
+                        var B = inImage[2][i][k];
+                        var pixel = Math.floor((R + G + B) / 3);
+                        if (pixel < value) {
+                            pixel = 0;
+                        }
+                        else if (pixel > value) {
+                            pixel = 255;
+                        }
+                        else {
+                            pixel = 0;
+                        }
+                        outImage[0][i][k] = pixel;
+                        outImage[1][i][k] = pixel;
+                        outImage[2][i][k] = pixel;
+                    }
+                }
+            }
+            displayImage();
+        }
+
+		//106. 흑백 (평균값)
+		function avgblackImage() {
+			document.getElementById("rangediv").style.display = "none";
+			// *** 영상 처리 알고리즘 ***
+			var sum = 0;
+			var avg = 0;
+
+			for (var rgb = 0; rgb < 4; rgb++) {
+				for (var i = 0; i < outH; i++) {
+					for (var k = 0; k < outW; k++) {
+						var pixel = inImage[rgb][i][k];
+						sum += pixel;
+					}
+				}
+			}
+
+			avg = Math.floor(sum / (outH * outW * 3));
+			// console.log(avg);
+
+			for (var rgb = 0; rgb < 4; rgb++) {
+				for (var i = 0; i < outH; i++) {
+					for (var k = 0; k < outW; k++) {
+						var R = inImage[0][i][k];
+						var G = inImage[1][i][k];
+						var B = inImage[2][i][k];
+						var Alpha = inImage[3][i][k];
+						var pixel = Math.floor((R + G + B + Alpha) / 4);
+						if (pixel < avg) {
+							pixel = 0;
+						}
+						else if (pixel > avg) {
+							pixel = 255;
+						}
+						else {
+							pixel = 0;
+						}
+
+						outImage[0][i][k] = outImage[1][i][k] = outImage[2][i][k] = pixel;
+					}
+				}
+			}
+			displayImage();
+		}
+
+		// 107.흑백 (중앙값)
+		function centbkImage() {
+			document.getElementById("rangediv").style.display = "none";
+
+			// *** 영상 처리 알고리즘 ***
+			var ni = 0;
+			var narray = new Array();
+			for (var rgb = 0; rgb < 4; rgb++) {
+				for (var i = 0; i < inH; i++) {
+					for (var k = 0; k < inW; k++) {
+						var pixel = inImage[rgb][i][k];
+						narray[ni] = pixel;
+						ni++;
+						inImage[rgb][i][k] = pixel;
+					}
+				}
+			}
+			oneArry = narray.sort(function (a, b) {
+				if (a > b)
+					return 1;
+				if (a === b)
+					return 0;
+				if (a < b)
+					return -1;
+			});
+
+			var midVal = oneArry[(Math.floor(oneArry.length / 2))];
+
+			for (var rgb = 0; rgb < 4; rgb++) {
+				for (var i = 0; i < inH; i++) {
+					for (var k = 0; k < inW; k++) {
+						var R = inImage[0][i][k];
+						var G = inImage[1][i][k];
+						var B = inImage[2][i][k];
+
+						var pixel = Math.floor((R + G + B) / 3);
+
+						if (pixel < midVal) {
+							pixel = 0;
+						}
+						else if (pixel > midVal) {
+							pixel = 255;
+						}
+						else {
+							pixel = 0;
+						}
+
+						outImage[0][i][k] = outImage[1][i][k] = outImage[2][i][k] = pixel;
+					}
+				}
+			}
+			displayImage();
+		}
+
+		//108.흑백 (127)
+		function numbkImage() {
+			document.getElementById("rangediv").style.display = "none";
+
+			// *** 영상 처리 알고리즘 ***
+			var value = 127;
+			for (var rgb = 0; rgb < 4; rgb++) {
+				for (var i = 0; i < inH; i++) {
+					for (var k = 0; k < inW; k++) {
+						var R = inImage[0][i][k];
+						var G = inImage[1][i][k];
+						var B = inImage[2][i][k];
+						var pixel = Math.floor((R + G + B) / 3);
+						if (pixel < value) {
+							pixel = 0;
+						}
+						else if (pixel > value) {
+							pixel = 255;
+						}
+						else {
+							pixel = 0;
+						}
+						outImage[0][i][k] = pixel;
+						outImage[1][i][k] = pixel;
+						outImage[2][i][k] = pixel;
+					}
+				}
+			}
+			displayImage();
+		}
+
+		//109.파라볼라(cap)
+		function paraCap() {
+			document.getElementById("rangediv").style.display = "none";
+
+			// *** 영상 처리 알고리즘 ***
+			//LUT(LookUP Table) 기법 --> 미리 복잡한 수식을 계산해 놓고 , 가져다 쓰기
+			var LUT = new Array(256);
+			for (var i = 0; i < 256; i++) {
+				var outVal = 255.0 - 255.0 * Math.pow((i / 127.0 - 1), 2.0);
+				if (outVal > 255.0) {
+					outVal = 255.0;
+				}
+				if (outVal < 0.0)
+					outVal = 0.0;
+				LUT[i] = parseInt(outVal);
+				// console.log(outVal);
+			}
+
+			for (var i = 0; i < outH; i++) { 
+				for (var k = 0; k < outW; k++) {
+					outImage[0][i][k] = parseInt(LUT[outImage[0][i][k]]);
+					outImage[1][i][k] = parseInt(LUT[outImage[1][i][k]]);
+					outImage[2][i][k] = parseInt(LUT[outImage[2][i][k]]);
+
+				}
+			}
+			displayImage();
+		}
+
+		//110.감마보정
+		function gammaImg() {
+			document.getElementById("rangediv").style.display = "block";
+            document.getElementById("gammarange").style.display = "block";
+			//영상처리 알고리즘 . 
+			// LUT(LookUP Table ) 기법 --> 미리 복잡한 수식을 계산해 놓고 , 가져다 쓰기
+			// var value = parseInt(prompt("숫자를 입력:", "100"));
+			var value = parseFloat(document.getElementById('gammarange').value);
+			var LUT = new Array(256);
+			console.log(value);
+			for (var i = 0; i < 256; i++) {
+				outVal = Math.pow(i, 1 / value);
+				if (outVal > 255.0)
+					outVal = 255.0;
+				if (outVal < 0.0)
+					outVal = 0.0;
+				LUT[i] = parseInt(outVal);
+			}
+			for (var rgb = 0; rgb < 4; rgb++) {
+				for (var i = 0; i < outH; i++) {
+					for (var k = 0; k < outW; k++) {
+						outImage[0][i][k] = parseInt(LUT[inImage[0][i][k]]);
+						outImage[1][i][k] = parseInt(LUT[inImage[1][i][k]]);
+						outImage[2][i][k] = parseInt(LUT[inImage[2][i][k]]);
+
+					}
+				}
+			}
+			displayImage();
+		}
+		//111. 화소처리(AND 프로그램)
+		function andImage() {
+			document.getElementById("rangediv").style.display = "block";
+            document.getElementById("andrange").style.display = "block";
+
+			// *** 영상 처리 알고리즘 ***
+			// var value = parseInt(prompt("숫자를 입력 : ", "128"));
+			var value = parseFloat(document.getElementById('andrange').value);
+
+			for (var rgb = 0; rgb < 4; rgb++) {
+				for (var i = 0; i < outH; i++) {
+					for (var k = 0; k < outW; k++) {
+						// ** 진짜 핵심 알고리즘
+						var R = inImage[0][i][k];
+						var G = inImage[1][i][k];
+						var B = inImage[2][i][k];
+						var pixel = Math.floor((R + G + B) / 3);
+						if ((pixel & value) >= 255) {
+							pixel = 255;
+						}
+						else if ((pixel & value) < 0) {
+							pixel = 0;
+						}
+						else {
+							pixel = (pixel & value);
+						}
+						// console.log(inImage[i][k] && value);
+						outImage[0][i][k] = pixel;
+						outImage[1][i][k] = pixel;
+						outImage[2][i][k] = pixel;
+					}
+				}
+			}
+			displayImage();
+		}
+
+		//112. 화소처리(OR 프로그램)
+		function orImage() {
+
+			document.getElementById("rangediv").style.display = "block";
+            document.getElementById("orrange").style.display = "block";
+
+			// *** 영상 처리 알고리즘 ***
+			// var value = parseInt(prompt("숫자를 입력 : ", "128"));
+			var value = parseFloat(document.getElementById('orrange').value);
+
+			for (var rgb = 0; rgb < 4; rgb++) {
+				for (var i = 0; i < inH; i++) {
+					for (var k = 0; k < inW; k++) {
+						// ** 진짜 핵심 알고리즘
+						var R = inImage[0][i][k];
+						var G = inImage[1][i][k];
+						var B = inImage[2][i][k];
+						var pixel = Math.floor((R + G + B) / 3);
+						if ((pixel | value) >= 255) {
+							pixel = 255;
+						}
+						else if ((pixel | value) < 0) {
+							pixel = 0;
+						}
+						else {
+							pixel = (pixel | value);
+						}
+						// console.log(inImage[i][k] && value);
+						outImage[0][i][k] = pixel;
+						outImage[1][i][k] = pixel;
+						outImage[2][i][k] = pixel;
+					}
+				}
+			}
+			displayImage();
+		}
+
+		//113. 화소처리(XOR 프로그램)
+		function xorImage() {
+
+			document.getElementById("rangediv").style.display = "block";
+            document.getElementById("xorrange").style.display = "block";
+
+			// *** 영상 처리 알고리즘 ***
+			// var value = parseInt(prompt("숫자를 입력 : ", "128"));
+			var value = parseFloat(document.getElementById('xorrange').value);
+
+			for (var rgb = 0; rgb < 4; rgb++) {
+				for (var i = 0; i < inH; i++) {
+					for (var k = 0; k < inW; k++) {
+						// ** 진짜 핵심 알고리즘
+						var R = inImage[0][i][k];
+						var G = inImage[1][i][k];
+						var B = inImage[2][i][k];
+						var pixel = Math.floor((R + G + B) / 3);
+						if ((pixel ^ value) >= 255) {
+							pixel = 255;
+						}
+						else if ((pixel ^ value) < 0) {
+							pixel = 0;
+						}
+						else {
+							pixel = (pixel ^ value);
+						}
+						// console.log(inImage[i][k] && value);
+						outImage[0][i][k] = pixel;
+						outImage[1][i][k] = pixel;
+						outImage[2][i][k] = pixel;
+					}
+				}
+			}
+			displayImage();
+		}
+		//115. 범위 강조 변환
+		function stressImage() {
+			document.getElementById("rangediv").style.display = "none";
+            // (중요!) 출력 영상 크기 결정 --> 알고리즘에 의존
+            outH = inH;
+            outW = inW;
+            // 출력용 3차원 배열 메모리 할당
+            outImage = new Array(3); // 3장짜리 배열(R,G,B)
+            for (var i = 0; i < 3; i++) {
+                outImage[i] = new Array(outH);
+                for (var k = 0; k < outH; k++)
+                    outImage[i][k] = new Array(outW);
+            }
+            // *** 영상 처리 알고리즘 ***
+            var startPoint = parseInt(prompt("시작 값 :", 100));
+            var endPoint = parseInt(prompt("끝 값 : ", 150));
+            var rate = parseInt(prompt("강조 비율 입력 : ", "30"));
+
+            for (var rgb = 0; rgb < 3; rgb++) {
+                for (var i = 0; i < inH; i++) {
+                    for (var k = 0; k < inW; k++) {
+                        //문자 --> 숫자
+                        var R = inImage[0][i][k];
+                        var G = inImage[1][i][k];
+                        var B = inImage[2][i][k];
+                        var inVal = (R + G + B) / 3;
+                        //알고리즘
+                        if (inVal >= startPoint && inVal <= endPoint) {
+                            // inVal += 10;
+                            R += rate;
+                            G += rate;
+                            B += rate;
+                            if (R > 255)
+                                R = 255;
+                            if (G > 255)
+                                G = 255;
+                            if (B > 255)
+                                B = 255;
+                        } else
+                            outImage[0][i][k] = inImage[0][i][k];
+							outImage[1][i][k] = inImage[1][i][k];
+							outImage[2][i][k] = inImage[2][i][k];
+
+                        //숫자 --> 문자 
+                        outImage[0][i][k] = R;
+                        outImage[1][i][k] = G;
+                        outImage[2][i][k] = B;
+                    }
+                }
+            }
+            displayImageA();
+        }
+		//201. 축소하기
+		function zoomOut() {
+			document.getElementById("rangediv").style.display = "none";
+            // document.getElementById("rangediv").style.display = "block";
+            // document.getElementById("zoomrange").style.display = "block";
+
+			// *** 영상 처리 알고리즘 ***
+			var scale = parseInt(prompt("축소 배율 :", "2"));
+			// var scale = parseInt(document.getElementById('zoomrange').value);
+			// console.log(scale);
+            // (중요!) 출력 영상 크기 결정 --> 알고리즘에 의존
+            outH = parseInt(outH / scale);
+            outW = parseInt(outW / scale);
+            // 출력용 3차원 배열 메모리 할당
+            outImage = new Array(4); // 3장짜리 배열(R,G,B)
+            for (var i = 0; i < 4; i++) {
+                outImage[i] = new Array(outH);
+                for (var k = 0; k < outH; k++)
+                    outImage[i][k] = new Array(outW);
+            }
+
+            // *** 영상 처리 알고리즘 ***
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for (var i = 0; i < inH; i++) {
+                    for (var k = 0; k < inW; k++) {
+                        outImage[rgb][parseInt(i / scale)][parseInt(k / scale)] = inImage[rgb][i][k];
+						// console.log(inImage[rgb][i][k]);
+                    }
+                }
+            }
+            displayImage();
+        }
+
+		//202. 확대하기
+		function zoomIn() {
+			document.getElementById("rangediv").style.display = "none";
+            var scale = parseInt(prompt("확대 배율 :", "2"));
+            // (중요!) 출력 영상 크기 결정 --> 알고리즘에 의존
+            outH = parseInt(inH * scale);
+            outW = parseInt(inW * scale);
+            // 출력용 3차원 배열 메모리 할당
+            outImage = new Array(4); // 3장짜리 배열(R,G,B)
+            for (var i = 0; i < 4; i++) {
+                outImage[i] = new Array(outH);
+                for (var k = 0; k < outH; k++)
+                    outImage[i][k] = new Array(outW);
+            }
+
+            //출력 이미지를 초기화 시키기 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for (var i = 0; i < outH; i++) {
+                    for (var k = 0; k < outW; k++)
+                        outImage[rgb][i][k] = 0;
+                }
+            }
+
+            // *** 영상 처리 알고리즘 ***
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for (var i = 0; i < outH; i++) {
+                    for (var k = 0; k < outW; k++) {
+                        outImage[rgb][i][k] = inImage[rgb][parseInt(i / scale)][parseInt(k / scale)];
+                    }
+                }
+            }
+            displayImage();
+        }
+		//203. 양선형 보간법
+		function biLinear() {
+			document.getElementById("rangediv").style.display = "none";
+            var zoomRate = parseInt(prompt("확대 배율 :", "2"));
+            var largeH, largeW, smallH, smallW;
+            var ih, iw, point;
+            var c1, c2, c3, c4;
+
+            // (중요!) 출력 영상 크기 결정 --> 알고리즘에 의존
+            outH = parseInt(inH * zoomRate);
+            outW = parseInt(inW * zoomRate);
+            // 출력용 3차원 배열 메모리 할당
+            outImage = new Array(4); // 3장짜리 배열(R,G,B)
+            for (var i = 0; i < 4; i++) {
+                outImage[i] = new Array(outH);
+                for (var k = 0; k < outH; k++)
+                    outImage[i][k] = new Array(outW);
+            }
+
+            //출력 이미지를 초기화 시키기 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for (var i = 0; i < outH; i++) {
+                    for (var k = 0; k < outH; k++)
+                        outImage[rgb][i][k] = 0;
+                }
+            }
+            // *** 영상 처리 알고리즘 ***
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for (var i = 0; i < outH; i++) {
+                    for (var k = 0; k < outW; k++) {
+                        // ** 진짜 핵심 알고리즘
+
+                        largeH = i / zoomRate;
+                        largeW = k / zoomRate;
+
+                        ih = parseInt(largeH);
+                        iw = parseInt(largeW);
+                        //    console.log(iw);
+
+                        smallH = largeH - ih;
+                        smallW = largeW - iw;
+
+                        if (ih < 0 || ih >= (inH - 1) || iw < 0 || iw >= (inW - 1)) { //point = i * outW + k;
+                            outImage[rgb][i][k] = 255;
+                        } else {
+                            c1 = inImage[rgb][ih][iw];
+                            c2 = inImage[rgb][ih][iw + 1];
+                            c3 = inImage[rgb][ih + 1][iw + 1];
+                            c4 = inImage[rgb][ih + 1][iw];
+                            // console.log(c2);
+
+                            var newValue = (c1 * (1 - smallH) * (1 - smallW) +
+                                c2 * smallW * (1 - smallH) + c3 * smallW * smallH + c4 * (1 - smallW) * smallH);
+                            // point = i * outW + k;
+                            // console.log(newValue);
+                            outImage[rgb][i][k] = newValue;
+                        }
+                    }
+                }
+            }
+            // ** 출력 메모리의 내용을 화면에 출력하기 
+
+            displayImage();
+
+        }
+		//203.##반전(다각형)
+		var pntAry = []; //마우스가 지나간 좌표 모음 (대용량)
+
+        function reverseImage_free_mouse() {
+			document.getElementById("rangediv").style.display = "none";
+            pntAry = []; // 포인트 값들 초기화 
+            inCanvas.addEventListener("mousedown", __downMouse, false);
+            inCanvas.addEventListener("mousemove", __moveMouse, false);
+            inCanvas.addEventListener("mouseup", __upMouse, false);
+            var clickYN = false;
+
+            function __downMouse(e) {
+                clickYN = true;
+                sx = e.offsetX;
+                sy = e.offsetY;
+                pntAry[pntAry.length] = [sx, sy];
+            }
+            function __moveMouse(e) {
+                if (!clickYN) {
+                    return;
+                }
+                sx = e.offsetX;
+                sy = e.offsetY;
+                pntAry[pntAry.length] = [sx, sy];
+                //선 그리기 
+                pt1 = pntAry[pntAry.length - 2]; //내 앞
+                pt2 = pntAry[pntAry.length - 1]; //나
+                inCtx.beginPath();
+                inCtx.moveTo(pt1[0], pt1[1]);
+                inCtx.lineTo(pt2[0], pt2[1]);
+                inCtx.stroke();
+                inCtx.closePath();
+            }
+            function __upMouse(e) {
+                clickYN = false;
+                sx = e.offsetX;
+                sy = e.offsetY;
+                pt1 = pntAry[pntAry.length] = [sx, sy];
+                pt2 = pntAry[pntAry.length] = pntAry[0]; // 폐합 폴리곤으로 만들기 ...
+                //마지막 선 그리기
+                pt1 = pntAry[pntAry.length - 2]; //내 앞
+                pt2 = pntAry[pntAry.length - 1]; //나
+                inCtx.beginPath();
+                inCtx.moveTo(pt1[0], pt1[1]);
+                inCtx.lineTo(pt2[0], pt2[1]);
+                inCtx.stroke();
+                inCtx.closePath();
+
+                // alert(pntAry[0]);
+                // alert(pntAry[10]);
+                // alert(pntAry[pntAry.length-1]); //마지막 거
+
+                // 영상처리 진행 
+                __reverseImage();
+
+            }
+
+            function __reverseImage() {
+
+                // *** 영상 처리 알고리즘 ***
+                for (var rgb = 0; rgb < 4; rgb++) {
+                    for (var i = 0; i < outH; i++) {
+                        for (var k = 0; k < outW; k++) {
+
+                            if (pointInPolygon(pntAry, k, i)) { //true 리턴 햇을 떄 
+
+                                //문자 --> 숫자
+                                var R = 255 - inImage[0][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+                                var G = 255 - inImage[1][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+                                var B = 255 - inImage[2][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+
+                                //숫자 --> 문자
+                                outImage[0][i][k] = R;
+                                outImage[1][i][k] = G;
+                                outImage[2][i][k] = B;
+                            } else {
+
+                                outImage[0][i][k] = inImage[0][i][k];
+                                outImage[1][i][k] = inImage[1][i][k];
+                                outImage[2][i][k] = inImage[2][i][k];
+                            }
+                        }
+                    }
+                }
+                displayImage();
+            }
+            function pointInPolygon(pointArray, pntX, pntY) {
+                //pointArray : [ [x1, y1],[x2,y2],[x3,y3], .... [x1,y1]]
+                //pntX : x
+                //pntY : y
+                //만약 다각형 안에 있으면 true 리턴 , 아니면 false 리턴 
+                // 찾은 코드 
+                var x = pntX;
+                var y = pntY;
+
+                var inside = false;
+                for (var i = 0, j = pointArray.length - 1; i < pointArray.length; j = i++) {
+                    var xi = pointArray[i][0];
+                    var yi = pointArray[i][1];
+                    var xj = pointArray[j][0];
+                    var yj = pointArray[j][1];
+
+                    var intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                    if (intersect)
+                        inside = !inside;
+                }
+                return inside;
+                
+            }
+        }
+
+		function rgb2hsv(r, g, b) {
+            var max = Math.max(r, g, b), min = Math.min(r, g, b),
+                d = max - min,
+                h,
+                s = (max === 0 ? 0 : d / max),
+                v = max / 255;
+
+            switch (max) {
+                case min: h = 0; break;
+                case r: h = (g - b) + d * (g < b ? 6 : 0); h /= 6 * d; break;
+                case g: h = (b - r) + d * 2; h /= 6 * d; break;
+                case b: h = (r - g) + d * 4; h /= 6 * d; break;
+            }
+            return {
+                h: h, s: s, v: v
+            };
+        }
+
+        function hsv2rgb(h, s, v) {
+            var r, g, b, i, f, p, q, t;
+
+            h = h * 360; s = s * 100; v = v * 100;
+
+            // Make sure our arguments stay in-range
+            h = Math.max(0, Math.min(360, h));
+            s = Math.max(0, Math.min(100, s));
+            v = Math.max(0, Math.min(100, v));
+
+            h /= 360; s /= 100; v /= 100;
+
+            i = Math.floor(h * 6);
+            f = h * 6 - i;
+            p = v * (1 - s);
+            q = v * (1 - f * s);
+            t = v * (1 - (1 - f) * s);
+            switch (i % 6) {
+                case 0: r = v, g = t, b = p; break;
+                case 1: r = q, g = v, b = p; break;
+                case 2: r = p, g = v, b = t; break;
+                case 3: r = p, g = q, b = v; break;
+                case 4: r = t, g = p, b = v; break;
+                case 5: r = v, g = p, b = q; break;
+            }
+            return {
+                r: Math.round(r * 255),
+                g: Math.round(g * 255),
+                b: Math.round(b * 255)
+            };
+        }
+
+		//205. 색상 추출하기
+
+		function pickOrange(){
+			
+			var pickColor = document.getElementById('pInput').innerText;
+		
+			document.getElementById("rangediv").style.display = "none";
+			window.name = "parentForm";
+			openWin = window.open('popup.html','childForm','width=300,height=200' );
+			// 3초후에 "hello"라는 alert 창 띄우기
+			setTimeout(function () {
+				alert("works!");
+				getColorchange();
+			}, 5000);
+		}
+
+		function getColorchange(){
+			var pickColor = document.getElementById('pInput').innerText;
+			console.log(pickColor);
+
+			var select = pickColor;
+			
+			// select = document.getElementById('pInput').value;
+			console.log(select);
+            // (중요!) 출력 영상 크기 결정 --> 알고리즘에 의존
+            var startColor, endColor, startRedColor, endRedColor, red = false;
+			
+            switch (select) {
+                case 'red': // 빨강
+                    red = true;
+                    startColor = 350;
+                    endColor = 15;
+                    break;
+                case 'orange': // 오렌지
+                    startColor = 12;
+                    endColor = 30;
+                    break;
+                case 'yellow': // 노랑
+                    startColor = 50;
+                    endColor = 60;
+                    break;
+                case 'green': // 초록
+                    startColor = 130;
+                    endColor = 150;
+                    break;
+                case 'blue': // 파랑
+                    startColor = 210;
+                    endColor = 240;
+                    break;
+                case 'purple': // 보라
+                    startColor = 250;
+                    endColor = 300;
+                    break;
+                default:
+                    alert('잘못 입력 하셨습니다. ');
+                    break;
+            }
+
+            // *** 영상 처리 알고리즘 ***
+            // var startColor=12, endColor=30; // 오렌지 8~30 : 0~360도
+            // var startColor2=130, endColor2=150; // 오렌지 8~30 : 0~360도
+            for (var i = 0; i < outH; i++) {
+                for (var k = 0; k < outW; k++) {
+                    //문자 --> 숫자
+                    var R = outImage[0][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+                    var G = outImage[1][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+                    var B = outImage[2][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+
+                    //RGB --> HSV
+                    var hsv = rgb2hsv(R, G, B); // {h:120, s: 0.4, v:0.3}
+                    var H = hsv.h; // 0~1.0 *360.0
+                    var S = hsv.s;
+                    var V = hsv.v;
+                    //H범위 추출
+                    if (startColor < (H * 360) && (H * 360) < endColor) {
+                        // HSV --> RGB
+                        var rgb = hsv2rgb(H, S, V); // {r:150, g: 33, b:253}
+                        R = rgb.r;
+                        G = rgb.g;
+                        B = rgb.b;
+
+                        //숫자 --> 문자
+                        outImage[0][i][k] = R;
+                        outImage[1][i][k] = G;
+                        outImage[2][i][k] = B;
+                    } else {//나머지는 그레이
+                        var rgb = parseInt((R + G + B) / 3);
+                        //숫자 --> 문자
+                        outImage[0][i][k] = rgb;
+                        outImage[1][i][k] = rgb;
+                        outImage[2][i][k] = rgb;
+
+
+                    }
+                    if ((red == true) && (startColor < (H * 360) || (H * 360) < endColor)) {
+                        // HSV --> RGB
+                        var rgb = hsv2rgb(H, S, V); // {r:150, g: 33, b:253}
+                        R = rgb.r;
+                        G = rgb.g;
+                        B = rgb.b;
+
+                        //숫자 --> 문자
+                        outImage[0][i][k] = R;
+                        outImage[1][i][k] = G;
+                        outImage[2][i][k] = B;
+                    }
+
+                }
+            }
+            displayImageA();
+			
+		}
+
+
+
+		
+		
+
+		
+		//206. 채도 조절 (0.2)
+		function changeSaturation() {
+			document.getElementById("rangediv").style.display = "block";
+            document.getElementById("saturation").style.display = "block";
+
+			// *** 영상 처리 알고리즘 ***
+			// var value = parseInt(prompt("숫자를 입력 : ", "128"));
+			var s_value = parseFloat(document.getElementById('saturation').value);
+
+			// *** 영상 처리 알고리즘 ***
+			// var s_value = parseFloat(prompt("숫자를 입력(0~1) :", "-0.2"));
+			for (var i = 0; i < inH; i++) {
+				for (var k = 0; k < inW; k++) {
+					//문자 --> 숫자
+					var R = inImage[0][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+					var G = inImage[1][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+					var B = inImage[2][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+
+					//RGB --> HSV
+					var hsv = rgb2hsv(R, G, B); // {h:120, s: 0.4, v:0.3}
+					var H = hsv.h;
+					var S = hsv.s;
+					var V = hsv.v;
+					//채도 변경하기 
+					S += s_value;
+					// HSV --> RGB
+					var rgb = hsv2rgb(H, S, V); // {r:150, g: 33, b:253}
+					R = rgb.r;
+					G = rgb.g;
+					B = rgb.b;
+
+					//숫자 --> 문자
+					outImage[0][i][k] = R;
+					outImage[1][i][k] = G;
+					outImage[2][i][k] = B;
+
+				}
+			}
+			displayImageA();
+		}
+		//207. 명도 조절 (0.2)
+		function changeBrighteness() {
+			document.getElementById("rangediv").style.display = "block";
+            document.getElementById("brighteness").style.display = "block";
+
+			// *** 영상 처리 알고리즘 ***
+			// var value = parseInt(prompt("숫자를 입력 : ", "128"));
+			var v_value = parseFloat(document.getElementById('brighteness').value);
+            // (중요!) 출력 영상 크기 결정 --> 알고리즘에 의존
+            outH = inH;
+            outW = inW;
+            // 출력용 3차원 배열 메모리 할당
+            outImage = new Array(3); // 3장짜리 배열(R,G,B)
+            for (var i = 0; i < 3; i++) {
+                outImage[i] = new Array(outH);
+                for (var k = 0; k < outH; k++)
+                    outImage[i][k] = new Array(outW);
+            }
+            // *** 영상 처리 알고리즘 ***
+            // var v_value = parseFloat(prompt("숫자를 입력(0~1) :", "-0.2"));
+            for (var i = 0; i < inH; i++) {
+                for (var k = 0; k < inW; k++) {
+                    //문자 --> 숫자
+                    var R = inImage[0][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+                    var G = inImage[1][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+                    var B = inImage[2][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+
+                    //RGB --> HSV
+                    var hsv = rgb2hsv(R, G, B); // {h:120, s: 0.4, v:0.3}
+                    var H = hsv.h;
+                    var S = hsv.s;
+                    var V = hsv.v;
+                    //명도 변경하기 
+                    V -= v_value;
+                    // HSV --> RGB
+                    var rgb = hsv2rgb(H, S, V); // {r:150, g: 33, b:253}
+                    R = rgb.r;
+                    G = rgb.g;
+                    B = rgb.b;
+
+                    //숫자 --> 문자
+                    outImage[0][i][k] = R;
+                    outImage[1][i][k] = G;
+                    outImage[2][i][k] = B;
+
+                }
+            }
+            displayImageA();
+        }
+
+		//208. 미러링하기
+		function mirImage() {
+			document.getElementById("rangediv").style.display = "none";
+
+			// *** 영상 처리 알고리즘 ***
+			// inImage.reverse();//상하
+			for (var rgb = 0; rgb < 4; rgb++) {
+				for (var i = 0; i < outH; i++) {
+					inImage[rgb][i].reverse(); //좌우
+					for (var k = 0; k < outW; k++) {
+						outImage[rgb][i][k] = inImage[rgb][i][k];
+					}
+				}
+			}
+			displayImage();
+			}
+
+			function histoStretch() {
+			var high, low;
+
+			// *** 영상 처리 알고리즘 ***
+			// out = (in - low) / (high - low) * 255
+			high = low = inImage[0][0][0];
+
+			for (var rgb = 0; rgb < 3; rgb++) {
+				for (var i = 0; i < inH; i++) {
+					for (var k = 0; k < inW; k++) {
+
+						//문자 --> 숫자
+						var R = inImage[0][i][k];
+						var G = inImage[1][i][k];
+						var B = inImage[2][i][k];
+						var pixel = (R + G + B) / 3;
+						if (high < pixel) {
+							high = pixel;
+						}
+						if (low > pixel) {
+							low = pixel;
+						}
+					}
+				}
+			}
+
+			for (var rgb = 0; rgb < 3; rgb++) {
+				for (var i = 0; i < inH; i++) {
+					for (var k = 0; k < inW; k++) {
+						//문자 --> 숫자
+						var inVal = inImage[rgb][i][k];
+						//알고리즘
+						outVal = (inVal - low) / (high - low) * 255.0;
+						outVal = parseInt(outVal);
+						//숫자 --> 문자 
+						outImage[rgb][i][k] = outVal;
+					}
+				}
+			}
+			displayImage();
+		}
+
+		//301. 히스토그램 스트레칭
+		function histoStretch() {
+			document.getElementById("rangediv").style.display = "none";
+            var high, low;
+
+            // *** 영상 처리 알고리즘 ***
+            // out = (in - low) / (high - low) * 255
+            high = low = inImage[0][0][0];
+
+            for (var rgb = 0; rgb < 3; rgb++) {
+                for (var i = 0; i < inH; i++) {
+                    for (var k = 0; k < inW; k++) {
+
+                        //문자 --> 숫자
+                        var R = inImage[0][i][k];
+                        var G = inImage[1][i][k];
+                        var B = inImage[2][i][k];
+                        var pixel = (R + G + B) / 3;
+                        if (high < pixel) {
+                            high = pixel;
+                        }
+                        if (low > pixel) {
+                            low = pixel;
+                        }
+                    }
+                }
+            }
+
+            for (var rgb = 0; rgb < 3; rgb++) {
+                for (var i = 0; i < inH; i++) {
+                    for (var k = 0; k < inW; k++) {
+                        //문자 --> 숫자
+                        var inVal = inImage[rgb][i][k];
+                        //알고리즘
+                        outVal = (inVal - low) / (high - low) * 255.0;
+                        outVal = parseInt(outVal);
+                        //숫자 --> 문자 
+                        outImage[rgb][i][k] = outVal;
+                    }
+                }
+            }
+            displayImage();
+        }
+		//302. 엔드인 탐색
+		function endInSearch() {
+            var high, low;
+            // (중요!) 출력 영상 크기 결정 --> 알고리즘에 의존
+
+            // *** 영상 처리 알고리즘 ***
+            // out = (in - low) / (high - low) * 255
+            var high = [], low = [];
+
+            for (var rgb = 0; rgb < 4; rgb++) {
+                high = low = inImage[rgb][0][0];
+
+                for (var i = 0; i < outH; i++) {
+                    for (var k = 0; k < outW; k++) {
+                        //문자 --> 숫자
+                        var R = outImage[0][i][k];
+                        var G = outImage[1][i][k];
+                        var B = outImage[2][i][k];
+                        var A = outImage[3][i][k];
+                        var pixel = (R + G + B + A) / 4;
+                        if (high < pixel) {
+                            high = pixel;
+                        }
+                        if (low > pixel) {
+                            low = pixel;
+                        }
+                    }
+                }
+                high[rgb] -= 50;
+                low[rgb] += 50;
+            }
+
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for (var i = 0; i < outH; i++) {
+                    for (var k = 0; k < outW; k++) {
+                        //문자 --> 숫자
+                        var inVal = outImage[rgb][i][k];
+                        //알고리즘
+                        outVal = (inVal - low) / (high - low) * 255.0;
+                        if (outVal > 255.0) {
+                            outVal = 255.0;
+                        }
+                        if (outVal < 0.0) {
+                            outVal = 0.0;
+                        }
+                        outVal = parseInt(outVal);
+
+                        //숫자 --> 문자 
+                        outImage[rgb][i][k] = outVal;
+                    }
+                }
+            }
+            displayImage();
+        }
+
+		// 303. 평활화
+		function histoEqual() {
+			document.getElementById("rangediv").style.display = "none";
+            var high, low;
+
+            // *** 영상 처리 알고리즘 ***
+            //1단계 : 히스토그램 생성 
+            histoR = new Array(256);
+            histoG = new Array(256);
+            histoB = new Array(256);
+            for (var i = 0; i < 256; i++) { //초기화
+                histoR[i] = 0;
+                histoG[i] = 0;
+                histoB[i] = 0;
+            }
+            
+			for (var i = 0; i < inH; i++) {
+				for (var k = 0; k < inW; k++) {
+					var valueR = inImage[0][i][k];
+					var valueG = inImage[1][i][k];
+					var valueB = inImage[2][i][k];
+					histoR[valueR]++;
+					histoG[valueG]++;
+					histoB[valueB]++;
+				}
+			}
+          
+            //2단계 : 누적 히스토그램 생성
+            sumHistoR = new Array(256);
+            sumHistoG = new Array(256);
+            sumHistoB = new Array(256);
+
+            for (var i = 0; i < 256; i++) {
+                sumHistoR[i] = 0;
+                sumHistoG[i] = 0;
+                sumHistoB[i] = 0;
+            }
+            sumValueR = 0;
+            sumValueG = 0;
+            sumValueB = 0;
+            for (var i = 0; i < 256; i++) {
+                sumValueR += histoR[i];
+                sumValueG += histoG[i];
+                sumValueB += histoB[i];
+                sumHistoR[i] = sumValueR;
+                sumHistoG[i] = sumValueG;
+                sumHistoB[i] = sumValueB;
+            }
+
+
+            //3단계 : 정규화된 누적 히스토그램
+            // n = sumHisto * ( 1/총픽셀수 ) * 화소최대밝기
+            normalHistoR = new Array(256);
+            normalHistoG = new Array(256);
+            normalHistoB = new Array(256);
+            for (var i = 0; i < 256; i++) { //초기화 모두 0
+                normalHistoR[i] = 0;
+                normalHistoG[i] = 0;
+                normalHistoB[i] = 0;
+            }
+            for (var i = 0; i < 256; i++) {
+                normalHistoR[i] = sumHistoR[i] * (1 / (inH * inW)) * 255;
+                normalHistoG[i] = sumHistoG[i] * (1 / (inH * inW)) * 255;
+                normalHistoB[i] = sumHistoB[i] * (1 / (inH * inW)) * 255;
+            }
+            // highR = lowR = highG = lowG = highB = lowB = inImage[0][0][0];
+
+            
+
+            //정규화 히스토그램을 적용시키기
+            for (var i = 0; i < inH; i++) {
+                for (var k = 0; k < inW; k++) {
+                    var pixelR = inImage[0][i][k];
+                    var pixelG = inImage[1][i][k];
+                    var pixelB = inImage[2][i][k];
+					var valR = normalHistoR[pixelR];
+					var valG = normalHistoG[pixelG];
+					var varB = normalHistoB[pixelB];
+                    if (valR > 255)
+						valR = 255;
+                    if (valR < 0)
+						valR = 0;
+                    if (valG > 255)
+						valG = 255;
+                    if (valG < 0)
+						valG = 0;
+                    if (varB > 255)
+						varB = 255;
+                    if (varB < 0)
+						varB = 0;
+                    outImage[0][i][k] = parseInt(valR);
+                    outImage[1][i][k] = parseInt(valG);
+                    outImage[2][i][k] = parseInt(varB);
+
+                }
+            }
+            displayImageA();
+        }
+
+		//402.이동과 차분 처리
+		function diffOpHor(){
+			document.getElementById("rangediv").style.display = "none";
+           // 캔버스 크기를 결정 
+           outCanvas.height = outH;
+            outCanvas.width = outW;
+            //입력 이미지의 메모리 할당 
+
+            var value = prompt("수평 또는 수직을 입력 하시오 : ","수평");
+            var mask = 0;
+            
+            //화소영역처리 (마스크)
+            if(value == "수평"){
+                mask = [ [ 0, -1, 0],
+                [ 0, 1, 0],
+                [ 0, 0, 0] ];
+            }else if(value == "수직"){
+                mask = [ [ 0, 0, 0],
+                [ -1, 1, 0],
+                [ 0, 0, 0] ];
+            }else{
+                alert("잘못 입력하셨습니다.");
+            }
+            // console.log(mask);
+
+            var tmpInImage = new Array(4);
+            for(var rgb=0; rgb<4; rgb++){
+            tmpInImage[rgb] = new Array(inH+2); 
+            for (var i=0; i<outH+2; i++){
+                tmpInImage[rgb][i] = new Array(inW+2);
+                for(var k=0; k<outW+2; k++) {
+                    tmpInImage[rgb][i][k] = 127; // 임시 입력 배열 초기화 (127)
+                }
+            }
+        }
+            
+            //입력 배열 --> 임시 입력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<outH;i++){
+                    for(var k=0;k<outW;k++){
+                        tmpInImage[rgb][i+1][k+1] = outImage[rgb][i][k];
+                    }
+                }
+            }
+            //임시 출력 배열
+            var tmpOutImage = new Array();
+            for (var rgb = 0; rgb < 4; rgb++) {
+                tmpOutImage[rgb] = new Array(outH);
+                for(var i=0; i<outH; i++){
+                    tmpOutImage[rgb][i] = new Array(outW);
+                }
+            }
+
+
+            //영상처리 알고리즘 ******* --> 회선 연산 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var S = 0.0;
+                        for(var m=0;m<3;m++){
+                            for(var n=0;n<3;n++){
+                                S += tmpInImage[rgb][i+m][k+n] * mask[m][n];
+                            }
+                        }
+                    tmpOutImage[rgb][i][k] = S;
+                }
+            }
+        }
+            //후처리 작업 (마스크 합계가 0이면 127 정도를 더하기)
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        tmpOutImage[rgb][i][k] += 127;
+                    }
+                }
+            }
+
+            //임시 출력 배열 --> 출력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var v = tmpOutImage[rgb][i][k];
+                        if(v > 255.0)
+                            v=255.0;
+                        if(v<0.0)
+                            v=0.0;
+                        outImage[rgb][i][k] = parseInt(v);
+                    }
+                }
+            }
+
+            // ** 입력 메모리의 내용을 화면에 출력하기 . 
+            displayImage();
+        }
+		//304. 90도 회전\
+		function rotateNine() {
+			document.getElementById("rangediv").style.display = "none";
+            // (중요!) 출력 영상 크기 결정 --> 알고리즘에 의존
+
+            var rotateH = outW;
+            var rotateW = outH;
+
+            imageNine = new Array(4);
+            for (var rgb = 0; rgb < 4; rgb++) {
+                imageNine[rgb] = new Array(rotateW);
+                for (var i = 0; i < rotateW; i++) {
+                    imageNine[rgb][i] = new Array(rotateH);
+                }
+            }
+
+
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for (var i = 0; i < rotateW; i++) {
+                    for (var k = 0; k < rotateH; k++) {
+                        imageNine[rgb][k][(outH - i)] = outImage[rgb][i][k];
+
+                    }
+                }
+            }
+            outImage = new Array(4); //리사이즈
+
+            // *** 영상 처리 알고리즘 ***
+            for (var rgb = 0; rgb < 4; rgb++) {
+                outImage[rgb] = new Array(rotateH);
+                for (var i = 0; i < rotateH; i++) {
+                    outImage[rgb][i] = new Array(rotateW);
+                    for (var k = 0; k < rotateW; k++) {
+                        outImage[rgb][i][k] = imageNine[rgb][i][k];
+                    }
+                }
+            }
+
+            outH = rotateH;
+            outW = rotateW;
+            displayImage();
+        }
+		//305. 각도 회전
+		function rotateNum() {
+			document.getElementById("rangediv").style.display = "block";
+            document.getElementById("rotate").style.display = "block";
+
+			// *** 영상 처리 알고리즘 ***
+			// var value = parseInt(prompt("숫자를 입력 : ", "128"));
+			var degree = parseInt(document.getElementById('rotate').value);
+
+			var CenterH, CenterW, newH, newW;
+			var Radian, PI, Value;
+			PI = 3.14159265358979;
+
+			// var degree = parseInt(prompt("회전 각도º : ", "45"));
+			// var background = parseInt(prompt("사진배경색을 입력하세요 0또는 255 (0:검은색) (255:흰색): ", "255"));
+			Radian = degree * PI / 180.0; //cos, sin 값 안에들어가는 각도 값이 라디안 값 => 라디안으로 변경
+			console.log(Radian);
+
+			outH = Math.floor((inW) * Math.abs(Math.sin(Radian)) + (inH) * Math.abs(Math.cos(Radian)));
+			outW = Math.floor((inW) * Math.abs(Math.cos(Radian)) + (inH) * Math.abs(Math.sin(Radian)));
+
+
+			console.log("outH", outH);
+			console.log("outW", outW);
+
+			outCanvas.height = outH;
+			outCanvas.width = outW;
+
+			// 회전후 사진의 중앙점 까지의 길이
+			CenterH = outH / 2;
+			CenterW = outW / 2;
+
+
+			// 출력용 3차원 배열 메모리 할당
+			outImage = new Array(3); // 3장짜리 배열 (R,G,B)
+			for (var i = 0; i < 3; i++) {
+				outImage[i] = new Array(outH);
+				for (var k = 0; k < outH; k++)
+					outImage[i][k] = new Array(outW);
+			}
+			//출력 이미지를 초기화 시키기
+			for (var rgb = 0; rgb < 3; rgb++) {
+				for (var i = 0; i < outH; i++) {
+					for (var k = 0; k < outW; k++) {
+						outImage[rgb][i][k] = String.fromCharCode(0);
+					}
+				}
+			}
+			for (var rgb = 0; rgb < 3; rgb++) {
+				for (i = 0; i < outH; i++) {
+					for (k = 0; k < outW; k++) {
+						newW = parseInt((i - CenterH) * Math.sin(Radian) + (k - CenterW) * Math.cos(Radian) + inW / 2);                       
+						newH = parseInt((i - CenterH) * Math.cos(Radian) - (k - CenterW) * Math.sin(Radian) + inH / 2);
+						
+					
+						if (newH < 0 || newH >= inH) {
+							Value = 255;
+						} else if (newW < 0 || newW >= inW) {
+							Value = 255;
+						} else {
+							// console.log("newW", newW);
+							// console.log("newH", newH);
+							Value = inImage[rgb][newH][newW];
+							// console.log("Value", Value);
+						}
+						outImage[rgb][i][k] = Value;
+					}
+				}
+			}
+			outCanvas.height = outH;
+			outCanvas.width = outW;
+			outPaper = outCtx.createImageData(outW, outH); // 캔버스에 종이 붙이기 (크기는 캔버스 동일)
+
+			for (var i = 0; i < outH; i++) {
+				for (var k = 0; k < outW; k++) {
+					var R = outImage[0][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+					var G = outImage[1][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+					var B = outImage[2][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+					outPaper.data[(i * outW + k) * 4 + 0] = R; // Red
+					outPaper.data[(i * outW + k) * 4 + 1] = G; // Green
+					outPaper.data[(i * outW + k) * 4 + 2] = B; // Blue
+					outPaper.data[(i * outW + k) * 4 + 3] = 255; // Alpha
+				}
+			}
+			outCtx.putImageData(outPaper, 0, 0); // (0,0) 좌표에 붙여라.
+			
+		}
+		//401. 엠보싱
+		function embossing(){
+			document.getElementById("rangediv").style.display = "none";
+            
+
+            //화소영역처리 (마스크)
+            var mask = [ [ -1, 0, 0],
+                        [ 0, 0, 0],
+                        [ 0, 0, 1] ];
+            //임시 입력 배열
+            var tmpInImage = new Array(); //위,아래
+            for (var rgb = 0; rgb < 4; rgb++) {
+                tmpInImage[rgb] = new Array(inH+2); //위,아래
+                for(var i=0;i<inH+2;i++){
+                    tmpInImage[rgb][i] = new Array(inW + 2);
+                }
+            }
+            //임시 입력 배열 초기화 (127)
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<inH+2; i++){
+                    for(var k=0; k<inW+2;k++){
+                        tmpInImage[rgb][i][k] = 127;
+                    }
+                }
+            }
+            //입력 배열 --> 임시 입력 배열 
+            
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<inH;i++){
+                    for(var k=0;k<inW;k++){
+                        tmpInImage[rgb][i+1][k+1] = outImage[rgb][i][k];
+                    }
+                }
+            }
+            //임시 출력 배열
+            var tmpOutImage = new Array();
+            for (var rgb = 0; rgb < 4; rgb++) {
+                tmpOutImage[rgb] = new Array(outH);
+                for(var i=0; i<outH; i++){
+                    tmpOutImage[rgb][i] = new Array(outW);
+                }
+            }
+
+
+            //영상처리 알고리즘 ******* --> 회선 연산 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var S = 0.0;
+                        for(var m=0;m<3;m++){
+                            for(var n=0;n<3;n++){
+                                S += tmpInImage[rgb][i+m][k+n] * mask[m][n];
+                            }
+                        }
+                    tmpOutImage[rgb][i][k] = S;
+                    }
+                }
+            }
+            //후처리 작업 (마스크 합계가 0이면 127 정도를 더하기)
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        tmpOutImage[rgb][i][k] += 127;
+                    }
+                }
+            }
+
+            //임시 출력 배열 --> 출력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var v = tmpOutImage[rgb][i][k];
+                        if(v > 255.0)
+                            v=255.0;
+                        if(v<0.0)
+                            v=0.0;
+                        outImage[rgb][i][k] = parseInt(v);
+                    }
+                }
+            }
+
+            // ** 입력 메모리의 내용을 화면에 출력하기 . 
+            displayImageA();
+        }
+		
+	  //403.경계선1
+	  function edge1() { 
+		document.getElementById("rangediv").style.display = "none";
+         
+		 // 캔버스 크기를 결정 
+		 outCanvas.height = outH;
+		 outCanvas.width = outW;
+		 //입력 이미지의 메모리 할당 
+
+		 //화소영역처리 (마스크)
+		 var mask = [ [ -1/9.0, -1/9.0, -1/9.0],
+					 [ -1/9.0, 8/9.0, -1/9.0],
+					 [ -1/9.0, -1/9.0, -1/9.0] ];
+		 //임시 입력 배열
+		 var tmpInImage = new Array(); //위,아래
+		 for (var rgb = 0; rgb < 4; rgb++) {
+			  tmpInImage[rgb] = new Array(outH+2); //위,아래
+			 for(var i=0;i<outH+2;i++){
+				 tmpInImage[rgb][i] = new Array(outW + 2);
+			 }
+		 }
+		 //임시 입력 배열 초기화 (127)
+		 for (var rgb = 0; rgb < 4; rgb++) {
+			 for(var i=0;i<outH+2; i++){
+				 for(var k=0; k<outW+2;k++){
+					 tmpInImage[rgb][i][k] = 127;
+				 }
+			 }
+		 }
+		 //입력 배열 --> 임시 입력 배열 
+		 for (var rgb = 0; rgb < 4; rgb++) {
+			 for(var i=0;i<outH;i++){
+				 for(var k=0;k<outW;k++){
+					 tmpInImage[rgb][i+1][k+1] = outImage[rgb][i][k];
+				 }
+			 }
+		 }
+		 //임시 출력 배열
+		 var tmpOutImage = new Array();
+		 for (var rgb = 0; rgb < 4; rgb++) {
+			 tmpOutImage[rgb] = new Array(outH);
+			 for(var i=0; i<outH; i++){
+				 tmpOutImage[rgb][i] = new Array(outW);
+			 }
+		 }
+
+
+		 //영상처리 알고리즘 ******* --> 회선 연산 
+		 for (var rgb = 0; rgb < 4; rgb++) {
+			 for(var i=0; i<outH;i++){
+				 for(var k=0; k<outW; k++){
+					 var S = 0.0;
+					 for(var m=0;m<3;m++){
+						 for(var n=0;n<3;n++){
+							 S += tmpInImage[rgb][i+m][k+n] * mask[m][n];
+						 }
+					 }
+					 tmpOutImage[rgb][i][k] = S;
+				 }
+			 }
+		 }
+		 //후처리 작업 (마스크 합계가 0이면 127 정도를 더하기)
+		 // for (var rgb = 0; rgb < 4; rgb++) {
+		 //     for(var i=0; i<outH;i++){
+		 //         for(var k=0; k<outW; k++){
+		 //             tmpOutImage[rgb][i][k] += 127;
+		 //         }
+		 //     }
+		 // }
+
+		 //임시 출력 배열 --> 출력 배열 
+		 for (var rgb = 0; rgb < 4; rgb++) {
+			 for(var i=0; i<outH;i++){
+				 for(var k=0; k<outW; k++){
+					 var v = tmpOutImage[rgb][i][k];
+					 if(v > 255.0)
+						 v=255.0;
+					 if(v<0.0)
+						 v=0.0;
+					 outImage[rgb][i][k] = parseInt(v);
+				 }
+			 }
+		 }
+
+		 // ** 입력 메모리의 내용을 화면에 출력하기 . 
+		 displayImageA();
+	 }
+	 //404. 유사 연산자
+		function homogenOperator(){
+			document.getElementById("rangediv").style.display = "none";
+            
+            // 캔버스 크기를 결정 
+            outCanvas.height = outH;
+            outCanvas.width = outW;
+            //입력 이미지의 메모리 할당 
+
+            //화소영역처리 (마스크)
+            // var mask = [ [ -1/9.0, -1/9.0, -1/9.0],
+            //             [ -1/9.0, 8/9.0, -1/9.0],
+            //             [ -1/9.0, -1/9.0, -1/9.0] ];
+            //임시 입력 배열
+            var tmpInImage = new Array(); //위,아래
+            for (var rgb = 0; rgb < 4; rgb++) {
+                 tmpInImage[rgb] = new Array(outH+2); //위,아래
+                for(var i=0;i<outH+2;i++){
+                    tmpInImage[rgb][i] = new Array(outW + 2);
+                }
+            }
+            //임시 입력 배열 초기화 (127)
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<outH+2; i++){
+                    for(var k=0; k<outW+2;k++){
+                        tmpInImage[rgb][i][k] = 127;
+                    }
+                }
+            }
+            //입력 배열 --> 임시 입력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<outH;i++){
+                    for(var k=0;k<outW;k++){
+                        tmpInImage[rgb][i+1][k+1] = outImage[rgb][i][k];
+                    }
+                }
+            }
+            //임시 출력 배열
+            var tmpOutImage = new Array();
+            for (var rgb = 0; rgb < 4; rgb++) {
+                tmpOutImage[rgb] = new Array(outH);
+                for(var i=0; i<outH; i++){
+                    tmpOutImage[rgb][i] = new Array(outW);
+                }
+            }
+
+
+            //영상처리 알고리즘 ******* --> 회선 연산 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var S = 0.0;
+                        for(var m=0;m<3;m++){
+                            for(var n=0;n<3;n++){
+                                if(Math.abs(tmpInImage[rgb][i+1][k+1] - tmpInImage[rgb][i+n][k+m]) >= S){
+                                //블록의 가운데 값 - 블록의 주변 픽셀 값이 절대 값 
+                                // 중에서 최대값을 찾는다 . 
+                            }
+                            S = Math.abs(tmpInImage[rgb][i+1][k+1] - tmpInImage[rgb][i+n][k+m]);
+                            }
+                        }
+                        tmpOutImage[rgb][i][k] = S;
+                    }
+                }
+            }
+            //후처리 작업 (마스크 합계가 0이면 127 정도를 더하기)
+            // for (var rgb = 0; rgb < 4; rgb++) {
+            //     for(var i=0; i<outH;i++){
+            //         for(var k=0; k<outW; k++){
+            //             tmpOutImage[rgb][i][k] += 127;
+            //         }
+            //     }
+            // }
+
+            //임시 출력 배열 --> 출력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var v = tmpOutImage[rgb][i][k];
+                        if(v > 255.0)
+                            v=255.0;
+                        if(v<0.0)
+                            v=0.0;
+                        outImage[rgb][i][k] = parseInt(v);
+                    }
+                }
+            }
+
+            // ** 입력 메모리의 내용을 화면에 출력하기 . 
+            displayImageA();
+        }
+		//405. 차 연산자
+		function diffOperator(){
+			document.getElementById("rangediv").style.display = "none";
+           // 캔버스 크기를 결정 
+           outCanvas.height = outH;
+            outCanvas.width = outW;
+            //입력 이미지의 메모리 할당 
+
+            //화소영역처리 (마스크)
+            // var mask = [ [ -1/9.0, -1/9.0, -1/9.0],
+            //             [ -1/9.0, 8/9.0, -1/9.0],
+            //             [ -1/9.0, -1/9.0, -1/9.0] ];
+            //임시 입력 배열
+            var tmpInImage = new Array(); //위,아래
+            for (var rgb = 0; rgb < 4; rgb++) {
+                 tmpInImage[rgb] = new Array(outH+2); //위,아래
+                for(var i=0;i<outH+2;i++){
+                    tmpInImage[rgb][i] = new Array(outW + 2);
+                }
+            }
+            //임시 입력 배열 초기화 (127)
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<outH+2; i++){
+                    for(var k=0; k<outW+2;k++){
+                        tmpInImage[rgb][i][k] = 127;
+                    }
+                }
+            }
+            //입력 배열 --> 임시 입력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<outH;i++){
+                    for(var k=0;k<outW;k++){
+                        tmpInImage[rgb][i+1][k+1] = outImage[rgb][i][k];
+                    }
+                }
+            }
+            //임시 출력 배열
+            var tmpOutImage = new Array();
+            for (var rgb = 0; rgb < 4; rgb++) {
+                tmpOutImage[rgb] = new Array(outH);
+                for(var i=0; i<outH; i++){
+                    tmpOutImage[rgb][i] = new Array(outW);
+                }
+            }
+
+
+            //영상처리 알고리즘 ******* --> 회선 연산 
+            var mask = new Array(4);
+            var S=0.0;
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        S = 0.0;
+                        mask[0] = Math.abs(tmpInImage[rgb][i][k] - tmpInImage[rgb][i+2][k+2]);
+                        mask[1] = Math.abs(tmpInImage[rgb][i][k+2] - tmpInImage[rgb][i+2][k]);
+                        mask[2] = Math.abs(tmpInImage[rgb][i][k+1] - tmpInImage[rgb][i+2][k+1]);
+                        mask[3] = Math.abs(tmpInImage[rgb][i+1][k+2] - tmpInImage[rgb][i+1][k]);
+                        
+
+                        for(var m=0;m<4;m++){
+                            if(mask[m] >= S){
+                                S = mask[m];
+                            }
+                        }
+                        // console.log(S)
+                        tmpOutImage[rgb][i][k] = S;
+                    }
+                }
+            }
+            //후처리 작업 (마스크 합계가 0이면 127 정도를 더하기)
+            // for (var rgb = 0; rgb < 4; rgb++) {
+            //     for(var i=0; i<outH;i++){
+            //         for(var k=0; k<outW; k++){
+            //             tmpOutImage[rgb][i][k] += 127;
+            //         }
+            //     }
+            // }
+
+            //임시 출력 배열 --> 출력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var v = tmpOutImage[rgb][i][k];
+                        if(v > 255.0)
+                            v=255.0;
+                        if(v<0.0)
+                            v=0.0;
+                        outImage[rgb][i][k] = parseInt(v);
+                    }
+                }
+            }
+
+            // ** 입력 메모리의 내용을 화면에 출력하기 . 
+            displayImageA();
+        }
+
+		//406. LoG
+		function loGImage(){
+			document.getElementById("rangediv").style.display = "none";
+           // 캔버스 크기를 결정 
+           outCanvas.height = outH;
+            outCanvas.width = outW;
+            //입력 이미지의 메모리 할당 
+
+            //화소영역처리 (마스크)
+            var mask = [ [ 0.0, 0.0, -1.0, 0.0, 0.0],
+                        [  0.0, -1.0, -2.0, -1.0, 0.0],
+                        [ -1.0, -2.0, 16.0, -2.0, -1.0],
+                        [  0.0, -1.0, -2.0, -1.0, 0.0],
+                        [ 0.0, 0.0, -1.0, 0.0, 0.0] ];
+            //임시 입력 배열
+            var tmpInImage = new Array(); //위,아래
+            for (var rgb = 0; rgb < 4; rgb++) {
+                 tmpInImage[rgb] = new Array(outH+2); //위,아래
+                for(var i=0;i<outH+4;i++){
+                    tmpInImage[rgb][i] = new Array(outW + 4);
+                }
+            }
+            //임시 입력 배열 초기화 (127)
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<outH+2; i++){
+                    for(var k=0; k<outW+2;k++){
+                        tmpInImage[rgb][i][k] = 127;
+                    }
+                }
+            }
+            //입력 배열 --> 임시 입력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<outH;i++){
+                    for(var k=0;k<outW;k++){
+                        tmpInImage[rgb][i+1][k+1] = outImage[rgb][i][k];
+                    }
+                }
+            }
+            //임시 출력 배열
+            var tmpOutImage = new Array();
+            for (var rgb = 0; rgb < 4; rgb++) {
+                tmpOutImage[rgb] = new Array(outH);
+                for(var i=0; i<outH; i++){
+                    tmpOutImage[rgb][i] = new Array(outW);
+                }
+            }
+
+
+            //영상처리 알고리즘 ******* --> 회선 연산 
+            var S=0.0;
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var S = 0.0;
+                    for(var m=0;m<5;m++){
+                        for(var n=0;n<5;n++){
+                            S += tmpInImage[rgb][i+m][k+n] * mask[m][n];
+                        }
+                    }
+                    tmpOutImage[rgb][i][k] = S;
+                }
+            }
+        }
+            //후처리 작업 (마스크 합계가 0이면 127 정도를 더하기)
+            // for (var rgb = 0; rgb < 4; rgb++) {
+            //     for(var i=0; i<outH;i++){
+            //         for(var k=0; k<outW; k++){
+            //             tmpOutImage[rgb][i][k] += 127;
+            //         }
+            //     }
+            // }
+
+            //임시 출력 배열 --> 출력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var v = tmpOutImage[rgb][i][k];
+                        if(v > 255.0)
+                            v=255.0;
+                        if(v<0.0)
+                            v=0.0;
+                        outImage[rgb][i][k] = parseInt(v);
+                    }
+                }
+            }
+
+            // ** 입력 메모리의 내용을 화면에 출력하기 . 
+            displayImageA();
+        }
+		//407.DoG
+		function doGImage(){
+			document.getElementById("rangediv").style.display = "none";
+           // 캔버스 크기를 결정 
+           outCanvas.height = outH;
+            outCanvas.width = outW;
+            //입력 이미지의 메모리 할당 
+
+            //화소영역처리 (마스크)
+            var mask = [[0 , 0 , 0 , -1 , -1 , -1 , 0 , 0 , 0 , ] , 
+                        [0 , -2 , -3 , -3 , -3 , -3 , -3 , -2 , 0 , ] , 
+                        [0 , -3 , -2 , -1 , -1 , -1 , -2 , -3 , 0 , ] , 
+                        [-1 , -3 , -1 , 9 , 9 , 9 , -1 , -3 , -1 , ] , 
+                        [-1 , -3 , -1 , 9 , 19 , 9 , -1 , -3 , -1 , ] , 
+                        [-1 , -3 , -1 , 9 , 9 , 9 , -1 , -3 , -1 , ] , 
+                        [0 , -3 , -2 , -1 , -1 , -1 , -2 , -3 , 0 , ] , 
+                        [0 , -2 , -3 , -3 , -3 , -3 , -3 , -2 , 0 , ] , 
+                        [0 , 0 , 0 , -1 , -1 , -1 , 0 , 0 , 0 , ]];
+            //임시 입력 배열
+            var tmpInImage = new Array(); //위,아래
+            for (var rgb = 0; rgb < 4; rgb++) {
+                 tmpInImage[rgb] = new Array(outH+2); //위,아래
+                for(var i=0;i<outH+8;i++){
+                    tmpInImage[rgb][i] = new Array(outW + 8);
+                }
+            }
+            //임시 입력 배열 초기화 (127)
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<outH+8; i++){
+                    for(var k=0; k<outW+8;k++){
+                        tmpInImage[rgb][i][k] = 127;
+                    }
+                }
+            }
+            //입력 배열 --> 임시 입력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<outH;i++){
+                    for(var k=0;k<outW;k++){
+                        tmpInImage[rgb][i+1][k+1] = outImage[rgb][i][k];
+                    }
+                }
+            }
+            //임시 출력 배열
+            var tmpOutImage = new Array();
+            for (var rgb = 0; rgb < 4; rgb++) {
+                tmpOutImage[rgb] = new Array(outH);
+                for(var i=0; i<outH; i++){
+                    tmpOutImage[rgb][i] = new Array(outW);
+                }
+            }
+
+
+            //영상처리 알고리즘 ******* --> 회선 연산 
+            var S=0.0;
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var S = 0.0;
+                    for(var m=0;m<5;m++){
+                        for(var n=0;n<5;n++){
+                            S += tmpInImage[rgb][i+m][k+n] * mask[m][n];
+                        }
+                    }
+                    tmpOutImage[rgb][i][k] = S;
+                }
+            }
+        }
+            //후처리 작업 (마스크 합계가 0이면 127 정도를 더하기)
+            // for (var rgb = 0; rgb < 4; rgb++) {
+            //     for(var i=0; i<outH;i++){
+            //         for(var k=0; k<outW; k++){
+            //             tmpOutImage[rgb][i][k] += 127;
+            //         }
+            //     }
+            // }
+
+            //임시 출력 배열 --> 출력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var v = tmpOutImage[rgb][i][k];
+                        if(v > 255.0)
+                            v=255.0;
+                        if(v<0.0)
+                            v=0.0;
+                        outImage[rgb][i][k] = parseInt(v);
+                    }
+                }
+            }
+
+            // ** 입력 메모리의 내용을 화면에 출력하기 . 
+            displayImageA();
+        }
+
+		//408. 블러링(원본)
+		function blurring(){
+			document.getElementById("rangediv").style.display = "none";
+          
+		  // 캔버스 크기를 결정 
+		  outCanvas.height = outH;
+		  outCanvas.width = outW;
+		 
+		  //화소영역처리 (마스크)
+		  var mask = [ [ 1/9.0, 1/9.0, 1/9.0],
+					  [ 1/9.0, 1/9.0, 1/9.0],
+					  [ 1/9.0, 1/9.0, 1/9.0] ];
+		  //임시 입력 배열
+		  var tmpInImage = new Array(); //위,아래
+		  for (var rgb = 0; rgb < 4; rgb++) {
+			   tmpInImage[rgb] = new Array(outH+2); //위,아래
+			  for(var i=0;i<outH+2;i++){
+				  tmpInImage[rgb][i] = new Array(outW + 2);
+			  }
+		  }
+		  //임시 입력 배열 초기화 (127)
+		  for (var rgb = 0; rgb < 4; rgb++) {
+			  for(var i=0;i<outH+2; i++){
+				  for(var k=0; k<outW+2;k++){
+					  tmpInImage[rgb][i][k] = 127;
+				  }
+			  }
+		  }
+		  //입력 배열 --> 임시 입력 배열 
+		  for (var rgb = 0; rgb < 4; rgb++) {
+			  for(var i=0;i<outH;i++){
+				  for(var k=0;k<outW;k++){
+					  tmpInImage[rgb][i+1][k+1] = outImage[rgb][i][k];
+				  }
+			  }
+		  }
+		  //임시 출력 배열
+		  var tmpOutImage = new Array();
+		  for (var rgb = 0; rgb < 4; rgb++) {
+			  tmpOutImage[rgb] = new Array(outH);
+			  for(var i=0; i<outH; i++){
+				  tmpOutImage[rgb][i] = new Array(outW);
+			  }
+		  }
+
+
+		  //영상처리 알고리즘 ******* --> 회선 연산
+		  for (var rgb = 0; rgb < 4; rgb++) { 
+			  for(var i=0; i<inH;i++){
+				  for(var k=0; k<inW; k++){
+					  var S = 0.0;
+					  for(var m=0;m<3;m++){
+						  for(var n=0;n<3;n++){
+							  S += tmpInImage[rgb][i+m][k+n] * mask[m][n];
+						  }
+					  }
+					  tmpOutImage[rgb][i][k] = S;
+				  }
+			  }
+		  }
+		  //후처리 작업 (마스크 합계가 0이면 127 정도를 더하기)
+		  // for(var i=0; i<inH;i++){
+		  //     for(var k=0; k<inW; k++){
+		  //         tmpOutImage[i][k] += 127;
+		  //     }
+		  // }
+
+		  //임시 출력 배열 --> 출력 배열 
+		  for (var rgb = 0; rgb < 4; rgb++) { 
+			  for(var i=0; i<inH;i++){
+				  for(var k=0; k<inW; k++){
+					  var v = tmpOutImage[rgb][i][k];
+					  if(v > 255.0)
+						  v=255.0;
+					  if(v<0.0)
+						  v=0.0;
+					  outImage[rgb][i][k] = parseInt(v);
+				  }
+			  }
+		  }
+
+		  // ** 입력 메모리의 내용을 화면에 출력하기 . 
+		  displayImage();
+	  }
+	  //409.블러링(진하기)
+	  function blurrOperator(){
+		document.getElementById("rangediv").style.display = "none";
+           // 캔버스 크기를 결정 
+           outCanvas.height = outH;
+            outCanvas.width = outW;
+            //입력 이미지의 메모리 할당 
+
+        
+
+            //화소영역처리 (마스크)
+            var mSize = parseInt(prompt("숫자를 입력 : ","5"));
+            var mask = new Array();
+            for (var rgb = 0; rgb < 4; rgb++) {
+                mask[rgb] = new Array(mSize);
+                for(var i=0;i<mSize; i++){
+                    mask[rgb][i] =new Array(mSize);
+                }
+            }
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<mSize; i++){
+                    for(var k=0;k<mSize; k++){
+                        mask[rgb][i][k] = 1.0 / (mSize * mSize);
+                    }
+                }
+            }
+
+            //임시 입력 배열(입력 배열 +(mSize - 1))
+            var hSize = mSize - 1; //임시 입력 배열 크기
+            var tmpInImage = new Array(); //위,아래
+            for (var rgb = 0; rgb < 4; rgb++) {
+                tmpInImage[rgb] = new Array(inH+hSize); //위,아래
+                for(var i=0;i<inH+hSize;i++){
+                    tmpInImage[rgb][i] = new Array(inW + hSize);
+                }
+            }
+            //임시 입력 배열 초기화 (127)
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<outH; i++){
+                    for(var k=0; k<outW;k++){
+                        tmpInImage[rgb][i][k] = 127;
+                    }
+                }
+            }
+            //입력 배열 --> 임시 입력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<outH;i++){
+                    for(var k=0;k<outW;k++){
+                        tmpInImage[rgb][i+1][k+1] = outImage[rgb][i][k];
+                    }
+                }
+            }
+            //임시 출력 배열
+            var tmpOutImage = new Array();
+            for (var rgb = 0; rgb < 4; rgb++) {
+                tmpOutImage[rgb] = new Array(outH);
+                for(var i=0; i<outH; i++){
+                    tmpOutImage[rgb][i] = new Array(outW);
+                }
+            }
+
+
+            //영상처리 알고리즘 ******* --> 회선 연산 
+            var S=0.0;
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var S = 0.0;
+                        mask[0] = Math.abs(tmpInImage[rgb][i][k] - tmpInImage[rgb][i+2][k+2]);
+                        mask[1] = Math.abs(tmpInImage[rgb][i][k+2] - tmpInImage[rgb][i+2][k]);
+                        mask[2] = Math.abs(tmpInImage[rgb][i][k+1] - tmpInImage[rgb][i+2][k+1]);
+                        mask[3] = Math.abs(tmpInImage[rgb][i+1][k+2] - tmpInImage[rgb][i+1][k]);
+
+                        for(var m=0;m<4;m++){
+                        if(mask[m] >= S){
+                            S = mask[m];
+                        }
+                    }
+                    tmpOutImage[rgb][i][k] = S;
+                }
+            }
+        }
+            //후처리 작업 (마스크 합계가 0이면 127 정도를 더하기)
+            // for (var rgb = 0; rgb < 4; rgb++) {
+            //     for(var i=0; i<outH;i++){
+            //         for(var k=0; k<outW; k++){
+            //             tmpOutImage[rgb][i][k] += 127;
+            //         }
+            //     }
+            // }
+
+            //임시 출력 배열 --> 출력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var v = tmpOutImage[rgb][i][k];
+                        if(v > 255.0)
+                            v=255.0;
+                        if(v<0.0)
+                            v=0.0;
+                        outImage[rgb][i][k] = parseInt(v);
+                    }
+                }
+            }
+
+            // ** 입력 메모리의 내용을 화면에 출력하기 . 
+            displayImageA();
+        }
+		//410. 샤프닝
+		function sharpening(){
+			document.getElementById("rangediv").style.display = "none";
+           // 캔버스 크기를 결정 
+           outCanvas.height = outH;
+            outCanvas.width = outW;
+            //입력 이미지의 메모리 할당 
+
+
+            var mask = [ [ 0.0, -1.0, 0.0],
+                        [ -1.0, 5.0, -1.0],
+                        [ 0.0, -1.0, 0.0] ];
+
+            var tmpInImage = new Array(4);
+            for(var rgb=0; rgb<4; rgb++){
+            tmpInImage[rgb] = new Array(inH+2); 
+            for (var i=0; i<outH+2; i++){
+                tmpInImage[rgb][i] = new Array(inW+2);
+                for(var k=0; k<outW+2; k++) {
+                    tmpInImage[rgb][i][k] = 127; // 임시 입력 배열 초기화 (127)
+                }
+            }
+        }
+            
+            //입력 배열 --> 임시 입력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<outH;i++){
+                    for(var k=0;k<outW;k++){
+                        tmpInImage[rgb][i+1][k+1] = outImage[rgb][i][k];
+                    }
+                }
+            }
+            //임시 출력 배열
+            var tmpOutImage = new Array();
+            for (var rgb = 0; rgb < 4; rgb++) {
+                tmpOutImage[rgb] = new Array(outH);
+                for(var i=0; i<outH; i++){
+                    tmpOutImage[rgb][i] = new Array(outW);
+                }
+            }
+
+
+
+            //영상처리 알고리즘 ******* --> 회선 연산 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var S = 0.0;
+                        for(var m=0;m<3;m++){
+                            for(var n=0;n<3;n++){
+                                S += tmpInImage[rgb][i+m][k+n] * mask[m][n];
+                            }
+                        }
+                    tmpOutImage[rgb][i][k] = S;
+                }
+            }
+        }
+            //후처리 작업 (마스크 합계가 0이면 127 정도를 더하기)
+            // for (var rgb = 0; rgb < 4; rgb++) {
+            //     for(var i=0; i<outH;i++){
+            //         for(var k=0; k<outW; k++){
+            //             tmpOutImage[rgb][i][k] += 127;
+            //         }
+            //     }
+            // }
+
+            //임시 출력 배열 --> 출력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var v = tmpOutImage[rgb][i][k];
+                        if(v > 255.0)
+                            v=255.0;
+                        if(v<0.0)
+                            v=0.0;
+                        outImage[rgb][i][k] = parseInt(v);
+                    }
+                }
+            }
+
+            // ** 입력 메모리의 내용을 화면에 출력하기 . 
+            displayImage();
+        }
+		//411. 가우시안 필터
+		function gaussianFilter(){
+			document.getElementById("rangediv").style.display = "none";
+           // 캔버스 크기를 결정 
+           outCanvas.height = outH;
+            outCanvas.width = outW;
+           //화소영역처리 (마스크)
+           var mask = [ [ 1.0/16.0, 1.0/8.0, 1.0/16.0],
+                        [ 1.0/8.0, 1.0/4.0, 1.0/8.0],
+                        [ 1.0/16.0, 1.0/8.0, 1.0/16.0] ];
+
+            var tmpInImage = new Array(4);
+            for(var rgb=0; rgb<4; rgb++){
+            tmpInImage[rgb] = new Array(inH+2); 
+            for (var i=0; i<outH+2; i++){
+                tmpInImage[rgb][i] = new Array(inW+2);
+                for(var k=0; k<outW+2; k++) {
+                    tmpInImage[rgb][i][k] = 127; // 임시 입력 배열 초기화 (127)
+                }
+            }
+        }
+            
+            //입력 배열 --> 임시 입력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<outH;i++){
+                    for(var k=0;k<outW;k++){
+                        tmpInImage[rgb][i+1][k+1] = outImage[rgb][i][k];
+                    }
+                }
+            }
+            //임시 출력 배열
+            var tmpOutImage = new Array();
+            for (var rgb = 0; rgb < 4; rgb++) {
+                tmpOutImage[rgb] = new Array(outH);
+                for(var i=0; i<outH; i++){
+                    tmpOutImage[rgb][i] = new Array(outW);
+                }
+            }
+
+
+
+            //영상처리 알고리즘 ******* --> 회선 연산 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var S = 0.0;
+                        for(var m=0;m<3;m++){
+                            for(var n=0;n<3;n++){
+                                S += tmpInImage[rgb][i+m][k+n] * mask[m][n];
+                            }
+                        }
+                    tmpOutImage[rgb][i][k] = S;
+                }
+            }
+        }
+            //후처리 작업 (마스크 합계가 0이면 127 정도를 더하기)
+            // for (var rgb = 0; rgb < 4; rgb++) {
+            //     for(var i=0; i<outH;i++){
+            //         for(var k=0; k<outW; k++){
+            //             tmpOutImage[rgb][i][k] += 127;
+            //         }
+            //     }
+            // }
+
+            //임시 출력 배열 --> 출력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var v = tmpOutImage[rgb][i][k];
+                        if(v > 255.0)
+                            v=255.0;
+                        if(v<0.0)
+                            v=0.0;
+                        outImage[rgb][i][k] = parseInt(v);
+                    }
+                }
+            }
+
+            // ** 입력 메모리의 내용을 화면에 출력하기 . 
+            displayImage();
+        }
+		//412.저주파 필터 샤프닝
+		function lpfSharp(){
+			document.getElementById("rangediv").style.display = "none";
+            // 캔버스 크기를 결정 
+           outCanvas.height = outH;
+            outCanvas.width = outW;
+            var alpha = parseInt(prompt("투명도(숫자) 입력 : ","10"));
+           //화소영역처리 (마스크)
+           var mask = [ [ 1.0/9.0, 1.0/9.0, 1.0/9.0],
+                        [ 1.0/9.0, 1.0/9.0, 1.0/9.0],
+                        [ 1.0/9.0, 1.0/9.0, 1.0/9.0] ];
+
+            var tmpInImage = new Array(4);
+            for(var rgb=0; rgb<4; rgb++){
+            tmpInImage[rgb] = new Array(inH+2); 
+            for (var i=0; i<outH+2; i++){
+                tmpInImage[rgb][i] = new Array(inW+2);
+                for(var k=0; k<outW+2; k++) {
+                    tmpInImage[rgb][i][k] = 127; // 임시 입력 배열 초기화 (127)
+                }
+            }
+        }
+            
+            //입력 배열 --> 임시 입력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0;i<outH;i++){
+                    for(var k=0;k<outW;k++){
+                        tmpInImage[rgb][i+1][k+1] = (alpha * outImage[rgb][i][k]) - tmpInImage[rgb][i][k];
+                    }
+                }
+            }
+            //임시 출력 배열
+            var tmpOutImage = new Array();
+            for (var rgb = 0; rgb < 4; rgb++) {
+                tmpOutImage[rgb] = new Array(outH);
+                for(var i=0; i<outH; i++){
+                    tmpOutImage[rgb][i] = new Array(outW);
+                }
+            }
+
+
+
+            //영상처리 알고리즘 ******* --> 회선 연산 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var S = 0.0;
+                        for(var m=0;m<3;m++){
+                            for(var n=0;n<3;n++){
+                                S += tmpInImage[rgb][i+m][k+n] * mask[m][n];
+                            }
+                        }
+                    tmpOutImage[rgb][i][k] = S;
+                }
+            }
+        }
+            //후처리 작업 (마스크 합계가 0이면 127 정도를 더하기)
+            // for (var rgb = 0; rgb < 4; rgb++) {
+            //     for(var i=0; i<outH;i++){
+            //         for(var k=0; k<outW; k++){
+            //             tmpOutImage[rgb][i][k] += 127;
+            //         }
+            //     }
+            // }
+
+            //임시 출력 배열 --> 출력 배열 
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for(var i=0; i<outH;i++){
+                    for(var k=0; k<outW; k++){
+                        var v = tmpOutImage[rgb][i][k];
+                        if(v > 255.0)
+                            v=255.0;
+                        if(v<0.0)
+                            v=0.0;
+                        outImage[rgb][i][k] = parseInt(v);
+                    }
+                }
+            }
+
+            // ** 입력 메모리의 내용을 화면에 출력하기 . 
+            displayImage();
+        }
+
+	</script>
+
+</head>
+<body onload='init()'>
+	<form>
+		<div class="tm-container-fluid">
+			<div class=" " style="display: flex;justify-content: flex-start;">
+				<label name="fileNum">여기에 숫자를 입력하세요.[00~100 까지]</label>
+				<input type='number' id='fileNum' name='fileNum' value="01" min="00" max="150" />
+				<input type='button' id='inFile' value="이미지 열기" onclick="loadImage()" />
+			</div>
+			<ul class="filters-button-group tm-mb-40" >
+				<li>	
+					<select  id='imageAlgo' onchange="selectAlgorithm(this.form.imageAlgo)">
+						<option value=100> -- 선택하세요[화소점] -- </option>
+						<option value=101> 동일 영상 처리 </option>
+						<option value=102> 영상 밝게/어둡게 </option>
+						<option value=103> 그레이스케일 </option>
+						<option value=104> #흑백(마우스) </option>
+						<option value=105> 흑백(입력값) </option>
+						<option value=106> 흑백(평균값) </option>
+						<option value=107> 흑백(중앙값) </option>
+						<option value=108> 흑백(127) </option>
+						<option value=109> 파라볼라 (cap) </option>
+						<option value=110> 감마보정 </option>
+						<option value=111> 화소처리(AND 프로그램) </option>
+						<option value=112> 화소처리(OR 프로그램) </option>
+						<option value=113> 화소처리(XOR 프로그램) </option>
+						<option value=114> 투명도 주기 (Alpha) </option>
+						<option value=115> 범위 강조 변환 </option>
+					</select>
+					<select style="display: none;" id='imageAlgo2' onchange="selectAlgorithm(this.form.imageAlgo2)">
+						<option value=200> -- 선택하세요[기하학] -- </option>
+						<option value=201> 축소하기 </option>
+						<option value=202> 확대하기 </option>
+						<option value=203> 양선형 보간법 </option>
+						<option value=204> ##반전(다각형) </option>
+						<option value=205> 색상 추출하기 </option>
+						<option value=206> 채도 조절 (0.2) </option>
+						<option value=207> 명도 조절 (0.2) </option>
+						<option value=208> 미러링하기 </option>
+					</select>
+					<select style="display: none;" id='imageAlgo3' onchange="selectAlgorithm(this.form.imageAlgo3)">
+						<option value=300> -- 선택하세요[히스토그램] -- </option>
+						<option value=301> 히스토그램 스트레칭 </option>
+						<option value=302> 엔드인 탐색 </option>
+						<option value=303> 평활화 </option>
+						<option value=304> 90도 회전 </option>
+						<option value=305> 각도 회전 </option>
+					</select>
+					<select style="display: none;" id='imageAlgo4' onchange="selectAlgorithm(this.form.imageAlgo4)">
+						<option value=400> -- 선택하세요[영역] -- </option>
+						<option value=401> 엠보싱 </option>
+						<option value=402> 이동과 차분 처리 </option>
+						<option value=403> 경계선1 </option>
+						<option value=404> 유사 연산자 </option>
+						<option value=405> 차 연산자 </option>
+						<option value=406> LoG </option>
+						<option value=407> DoG </option>
+						<option value=408>  블러링(원본) </option>
+						<option value=409> 블러링(진하기) </option>
+						<option value=410> 샤프닝 </option>
+						<option value=411> 가우시안 필터 </option>
+						<option value=412> 저주파 필터 샤프닝 </option>
+					</select>
+				</li>
+				<li><a href="#" id="area" onclick="getSelect()">영역 처리</a></li>
+				<li><a href="#" id="histogram" onclick="getSelect()">히스토 그램</a></li>
+				<li><a href="#" id="geomatic" onclick="getSelect()">기하학 처리</a></li>
+				<li><a href="#" id="point" class="active" onclick="getSelect()">화소점 처리</a></li>
+			</ul>
+			<!-- 색상 입력 -->
+			<div id="pInput" style="font-size: 5px;color:white;"></div>
+
+			<script>
+				function getSelect(){
+					$(document).ready(function(){
+						$('#point').click(function(){
+							// alert('1');
+							$('#imageAlgo').css('display','block');
+							$('#imageAlgo4').css('display','none');
+							$('#imageAlgo3').css('display','none');
+							$('#imageAlgo2').css('display','none');
+						});
+					});
+					$(document).ready(function(){
+						$('#geomatic').click(function(){
+							// alert('1');
+							$('#imageAlgo2').css('display','block');
+							$('#imageAlgo').css('display','none');
+							$('#imageAlgo4').css('display','none');
+							$('#imageAlgo3').css('display','none');
+						});
+					});
+					$(document).ready(function(){
+						$('#histogram').click(function(){
+							// alert('1');
+							$('#imageAlgo3').css('display','block');
+							$('#imageAlgo2').css('display','none');
+							$('#imageAlgo').css('display','none');
+							$('#imageAlgo4').css('display','none');
+						});
+					});
+					$(document).ready(function(){
+						$('#area').click(function(){
+							// alert('1');
+							$('#imageAlgo4').css('display','block');
+							$('#imageAlgo3').css('display','none');
+							$('#imageAlgo2').css('display','none');
+							$('#imageAlgo').css('display','none');
+						});
+					});
+				}
+			</script>
+			<section class="tm-site-header tm-about tm-mb-80 tm-p-50 tm-bgcolor-1 tm-border-rounded tm-flex-center">
+				<canvas id='inCanvas' ></canvas>
+				<!-- <i class="fas fa-heart fa-3x"></i>
+				<h1>Canvas</h1> -->
+			</section>
+			<div class="rangediv" id="rangediv">
+				<span>범위주기:</span>
+				<input type="range" class="range" id="addrange" min="-100" max="100" onchange="addImage()" style="display: none;"/>
+				<input type="range" class="range" id="bkrange" min="0" max="200" onchange="inputbkImage()" style="display: none;" />
+				<input type="range" class="range" id="gammarange" min="0.1" max="1.9" step="0.1" value="0.9" onchange="gammaImg()" style="display: none;" />
+				<input type="range" class="range" id="andrange" min="0" max="200"  value="128" onchange="andImage()" style="display: none;" />
+				<input type="range" class="range" id="orrange" min="0" max="200"  value="128" onchange="orImage()" style="display: none;" />
+				<input type="range" class="range" id="xorrange" min="0" max="200"  value="128" onchange="xorImage()" style="display: none;" />
+				<input type="range" class="range" id="zoomrange" min="1" max="4"  value="2" step="1"  onclick="zoomOut()" style="display: none;" />
+				<input type="range" class="range" id="saturation" min="0.1" max="0.5"  value="0.2" step="0.1"  onclick="changeSaturation()" style="display: none;" />
+				<input type="range" class="range" id="brighteness" min="0.1" max="0.5"  value="0.2" step="0.1"  onclick="changeBrighteness()" style="display: none;" />
+				<input type="range" class="range" id="rotate" min="1" max="360"  value="45" step="10"  onclick="rotateNum()" style="display: none;" />
+				<!-- <p id="rangeText"> text</p> -->
+			</div>
+
+			<section class="tm-site-header tm-about tm-mb-80 tm-p-50 tm-bgcolor-2 tm-border-rounded tm-flex-center">
+				<canvas id='outCanvas' ></canvas>
+				<!-- <div class="tm-site-header tm-about-header tm-flex-center">
+					<i class="fas fa-users fa-2x"></i>
+					<h2>Output Image</h2>
+				</div> -->
+				<!-- <div class="tm-about-text">
+					<p class="tm-mb-40">Nano Folio is simple HTML template with a minimal very light-weight custom CSS file. Max content width is 940 pixels. You can easily change the width or any part in this template. Gallery comes with a pop-up image and simple categories.</p>
+					<p class="tm-mb-0">Please support Tooplate website by telling your friends about it. That is going to be very helpful for us. Feel free to <a rel="nofollow" href="https://www.tooplate.com/contact" target="_blank">message us</a> via email or live chat if you have anything to say.</p>
+				</div> -->
+			</section>
+
+			<div class="tm-gallery-sect-80">
+
+			<section class="tm-contact tm-mb-50 tm-bgcolor-3 tm-border-rounded">
+				<div class="tm-contact-header tm-flex-center">
+					<i class="fas fa-map-pin fa-3x"></i>
+					<h2>Contact</h2>
+				</div>
+				<div class="tm-contact-info">
+					<address class="tm-mb-30" style="font-size: 14px;">
+						 javascript 영상처리 프로그래밍/컴퓨터 비전 프로그래밍</br>
+						- 개발 환경 -
+						사용 언어 : javascript , jquery ,html , css
+						개발 툴 : visual studio code
+					</address>
+					<div class="tm-text-white tm-mb-40">Tel: <a href="tel:01051864454" class="tm-link-white">010-5186-4454</a></div>
+					<div class="tm-flex">
+						<a href="https://github.com/kimhaeri-git" class="tm-social-link"><i class="fab fa-github"></i></a>
+						<a href="https://haerr-kim.tistory.com/" class="tm-social-link"><i class="fas fa-blog"></i></a>
+						<a href="mailto:hr4454@naver.com" class="tm-social-link"><i class="fa fa-envelope"></i></a>
+					</div>
+				</div>
+				<div class="tm-contact-form-container">
+					<form id="contact-form" action="" method="POST" class="tm-contact-form">
+						<input type="text" name="name" placeholder="name : 김혜리" disabled required="" />
+						<input type="email" name="email" placeholder="email : hr4454@naver.com" required="" disabled/>
+						<textarea rows="5" name="message" class="tm-mb-30" placeholder="message" required="" disabled style="font-size: 13px;">
+* 영상 처리 프로그래밍 [사용 기법들]
+ - 화소점 처리 프로그램 : 01~10번 사진
+ - 기하학 처리 프로그램 : 11~20번 사진
+ - 히스토그램 프로그램 : 21~30번 사진
+ - 영역 처리 프로그램 : 31~40번 사진
+ - 색상 추출 : 41~45번 사진[대표 45번]
+						</textarea>		          	
+						<!-- <button type="submit" class="tm-right tm-btn-submit">send</button>          	 -->
+					</form>    
+				</div> 
+			</section>
+
+			<footer class="tm-footer">
+				Copyright 2021 kim hae ri - 미니 프로젝트(Ver 1.0)
+			</footer>
+		</div>
+	</form>
+
+	<script src="js/jquery.min.js"></script>
+	<script src="js/imagesloaded.pkgd.min.js"></script>
+	<script src="js/isotope.pkgd.min.js"></script>
+	<script src="js/jquery.magnific-popup.min.js"></script>
+	<script>
+		$(function(){
+		  	// Init the image gallery
+		  	var $gallery = $(".tm-gallery").isotope({
+		    	itemSelector: ".tm-gallery-item",
+		    	layoutMode: "fitRows"
+		  	});
+		  
+		  	// Layout Isotope after each image loads
+		  	$gallery.imagesLoaded().progress(function() {
+		    	$gallery.isotope("layout");
+		  	});
+
+		  	$(".filters-button-group").on("click", "a", function(e) {
+		  		e.preventDefault();
+			    var filterValue = $(this).attr("data-filter");
+			    $gallery.isotope({ filter: filterValue });
+			    $('.filters-button-group a').removeClass('active');
+			    $(this).addClass('active');
+			});
+
+		  	// Magnific Pop up
+		  	$('.tm-gallery').magnificPopup({
+		  		delegate: 'a',
+			  	type: 'image',
+				  gallery: { enabled: true }
+			});
+		});
+	</script>
+</body>
+</html>
