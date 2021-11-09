@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Nano Folio - Simple HTML Template</title>
+	<title>미니 프로젝트(Ver 1.0)</title>
 	<link rel="stylesheet" href="fontawesome/css/all.min.css"> <!-- https://fontawesome.com/ -->
 	<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap" rel="stylesheet"> <!-- https://fonts.google.com/ -->
 	<link href="css/magnific-popup.min.css" rel="stylesheet">
@@ -52,12 +52,12 @@
 	
 
 	</style>
-	<script>  // 전역 변수부 (*중요*)
+	<script >  // 전역 변수부 (*중요*)
         var inCanvas, inCtx, inPaper, outCanvas, outCtx, outPaper; // 화면용
         var inImage, inH, inW, outImage, outH, outW; // 핵심 변수들
         var inFile;
     </script>
-	<script>// 공통 함수부
+	<script >// 공통 함수부
 		// 초기화 함수
         function init() {
             inCanvas = document.getElementById('inCanvas'); // 도화지에 접근
@@ -340,7 +340,6 @@
 						pixel = 0;
 						else
 						pixel += value;
-						// 숫자 --> 문자
 						outImage[rgb][i][k] = pixel;
 						// console.log(pixel);
 					}
@@ -438,6 +437,17 @@
 		function inputbkImage() {
 			document.getElementById("rangediv").style.display = "block";
             document.getElementById("bkrange").style.display = "block";
+
+            document.getElementById("addrange").style.display = "none";
+            // document.getElementById("bkrange").style.display = "none";
+            document.getElementById("gammarange").style.display = "none";
+            document.getElementById("andrange").style.display = "none";
+            document.getElementById("orrange").style.display = "none";
+            document.getElementById("xorrange").style.display = "none";
+            document.getElementById("zoomrange").style.display = "none";
+            document.getElementById("saturation").style.display = "none";
+            document.getElementById("brighteness").style.display = "none";
+            document.getElementById("rotate").style.display = "none";
 
 			// var value = parseInt(prompt("숫자를 입력:", "100"));
 			var value = parseInt(document.getElementById('bkrange').value);
@@ -628,6 +638,18 @@
 		function gammaImg() {
 			document.getElementById("rangediv").style.display = "block";
             document.getElementById("gammarange").style.display = "block";
+
+            document.getElementById("xorrange").style.display = "none";
+
+            document.getElementById("addrange").style.display = "none";
+            document.getElementById("bkrange").style.display = "none";
+            // document.getElementById("gammarange").style.display = "none";
+            document.getElementById("andrange").style.display = "none";
+            document.getElementById("orrange").style.display = "none";
+            document.getElementById("zoomrange").style.display = "none";
+            document.getElementById("saturation").style.display = "none";
+            document.getElementById("brighteness").style.display = "none";
+            document.getElementById("rotate").style.display = "none";
 			//영상처리 알고리즘 . 
 			// LUT(LookUP Table ) 기법 --> 미리 복잡한 수식을 계산해 놓고 , 가져다 쓰기
 			// var value = parseInt(prompt("숫자를 입력:", "100"));
@@ -658,6 +680,16 @@
 		function andImage() {
 			document.getElementById("rangediv").style.display = "block";
             document.getElementById("andrange").style.display = "block";
+            // 그외 none 처리
+            document.getElementById("addrange").style.display = "none";
+            document.getElementById("bkrange").style.display = "none";
+            document.getElementById("gammarange").style.display = "none";
+            document.getElementById("orrange").style.display = "none";
+            document.getElementById("xorrange").style.display = "none";
+            document.getElementById("zoomrange").style.display = "none";
+            document.getElementById("saturation").style.display = "none";
+            document.getElementById("brighteness").style.display = "none";
+            document.getElementById("rotate").style.display = "none";
 
 			// *** 영상 처리 알고리즘 ***
 			// var value = parseInt(prompt("숫자를 입력 : ", "128"));
@@ -696,6 +728,16 @@
 			document.getElementById("rangediv").style.display = "block";
             document.getElementById("orrange").style.display = "block";
 
+            document.getElementById("addrange").style.display = "none";
+            document.getElementById("bkrange").style.display = "none";
+            document.getElementById("gammarange").style.display = "none";
+            document.getElementById("andrange").style.display = "none";
+            document.getElementById("xorrange").style.display = "none";
+            document.getElementById("zoomrange").style.display = "none";
+            document.getElementById("saturation").style.display = "none";
+            document.getElementById("brighteness").style.display = "none";
+            document.getElementById("rotate").style.display = "none";
+
 			// *** 영상 처리 알고리즘 ***
 			// var value = parseInt(prompt("숫자를 입력 : ", "128"));
 			var value = parseFloat(document.getElementById('orrange').value);
@@ -732,6 +774,16 @@
 
 			document.getElementById("rangediv").style.display = "block";
             document.getElementById("xorrange").style.display = "block";
+
+            document.getElementById("addrange").style.display = "none";
+            document.getElementById("bkrange").style.display = "none";
+            document.getElementById("gammarange").style.display = "none";
+            document.getElementById("andrange").style.display = "none";
+            document.getElementById("orrange").style.display = "none";
+            document.getElementById("zoomrange").style.display = "none";
+            document.getElementById("saturation").style.display = "none";
+            document.getElementById("brighteness").style.display = "none";
+            document.getElementById("rotate").style.display = "none";
 
 			// *** 영상 처리 알고리즘 ***
 			// var value = parseInt(prompt("숫자를 입력 : ", "128"));
@@ -2776,6 +2828,40 @@
             displayImage();
         }
 
+        //114. 투명도 주기 
+        function alphaImage() {
+            document.getElementById("rangediv").style.display = "none";
+            var value = parseInt(prompt("알파값 :", "100"));
+
+
+            // *** 영상 처리 알고리즘 ***
+            for (var rgb = 0; rgb < 4; rgb++) {
+                for (var i = 0; i < outH; i++) {
+                    for (var k = 0; k < outW; k++) {
+                        outImage[rgb][i][k] = inImage[rgb][i][k];
+                    }
+                }
+            }
+            // ** 출력 메모리의 내용을 화면에 출력하기. **
+            // 캔버스 크기 조절
+            outCanvas.height = outH;
+            outCanvas.width = outW;
+            outPaper = outCtx.createImageData(outW, outH); // 캔버스에 종이 붙이기 (크기는 캔버스 동일)
+
+            for (var i = 0; i < outH; i++) {
+                for (var k = 0; k < outW; k++) {
+                    var R = outImage[0][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+                    var G = outImage[1][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+                    var B = outImage[2][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+                    outPaper.data[(i * outW + k) * 4 + 0] = R; // Red
+                    outPaper.data[(i * outW + k) * 4 + 1] = G; // Green
+                    outPaper.data[(i * outW + k) * 4 + 2] = B; // Blue
+                    outPaper.data[(i * outW + k) * 4 + 3] = value; // Alpha
+                }
+            }
+            outCtx.putImageData(outPaper, 0, 0); // (0,0) 좌표에 붙여라. 
+        }
+
 	</script>
 
 </head>
@@ -2783,7 +2869,7 @@
 	<form>
 		<div class="tm-container-fluid">
 			<div class=" " style="display: flex;justify-content: flex-start;">
-				<label name="fileNum">여기에 숫자를 입력하세요.[00~100 까지]</label>
+				<label name="fileNum">여기에 숫자를 입력하세요 (01~45) :</label>
 				<input type='number' id='fileNum' name='fileNum' value="01" min="00" max="150" />
 				<input type='button' id='inFile' value="이미지 열기" onclick="loadImage()" />
 			</div>
