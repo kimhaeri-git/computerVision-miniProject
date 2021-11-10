@@ -8,6 +8,7 @@
 	<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap" rel="stylesheet"> <!-- https://fonts.google.com/ -->
 	<link href="css/magnific-popup.min.css" rel="stylesheet">
     <link href="css/tooplate-style.css" rel="stylesheet">
+    <script  src="http://code.jquery.com/jquery-latest.min.js"></script>
 	<style>
 		#fileNum{
 			border: 2px solid #8DD8FF;
@@ -47,11 +48,36 @@
 		.range{
 			width: 50%;	
 		}
+        .filters-button-group{position: relative;}
 		
-	
-	
-
+        #colorSel{display: none;position: absolute; left: 0; top: -10px; width:200px; font-size: 12px;margin: 0; padding:0; background-color: rgba(0, 0, 0, 0.11);line-height: 24px;}
+        #colorSel input{ }
+        #colorSel *{margin: 0; padding:0;text-align: center;}
+        #colorSel p{color: black; }
+        #clickme{ background-color: burlywood;}
+        #colorSel ul>li{ font-weight: bold ; padding: 0 2px ;}
+        #colorSel ul>li:nth-child(1){background-color: rgba(255, 0, 0,0.8);}
+        #colorSel ul>li:nth-child(2){background-color:rgba(255, 166, 0,0.8);}
+        #colorSel ul>li:nth-child(3){background-color:rgba(255, 255, 0,0.8);}
+        #colorSel ul>li:nth-child(4){background-color: rgba(0, 128, 0,0.8);}
+        #colorSel ul>li:nth-child(5){background-color: rgba(0, 0, 255,0.8);}
+        #colorSel ul>li:nth-child(6){background-color: rgba(128, 0, 128,0.8);}
 	</style>
+    <script> // jQuery
+
+    $(document).ready(function(){
+        console.log("test");
+        $('#imageAlgo2').change(function(){
+                if($('#imageAlgo2').val()==205){
+                $('#colorSel').fadeIn();
+            }
+        });
+        $('#clickme').click(function(){
+            $('#colorSel').hide();
+        });
+    });
+
+    </script>
 	<script >  // 전역 변수부 (*중요*)
         var inCanvas, inCtx, inPaper, outCanvas, outCtx, outPaper; // 화면용
         var inImage, inH, inW, outImage, outH, outW; // 핵심 변수들
@@ -238,7 +264,7 @@
                     reverseImage_free_mouse();
                     break;
                 case 205: // 색상 추출하기
-                    pickOrange();
+                    // pickOrange();
                     break;
                 case 206: // 채도 낮추기
                     changeSaturation();
@@ -1161,22 +1187,32 @@
 
 		//205. 색상 추출하기
 
-		function pickOrange(){
+		function pickOrange(pickColor){
+        //     document.getElementById("rangediv").style.display = "none";
 			
-			var pickColor = document.getElementById('pInput').innerText;
-		
-			document.getElementById("rangediv").style.display = "none";
-			window.name = "parentForm";
-			openWin = window.open('popup.html','childForm','width=300,height=200' );
-			// 3초후에 "hello"라는 alert 창 띄우기
-			setTimeout(function () {
-				alert("works!");
-				getColorchange();
-			}, 5000);
-		}
+		// 	var pickColor = document.getElementById('pInput').innerText;
+        //     if(!pickColor){
+        //         window.name = "parentForm";
+        //         openWin = window.open('popup.html','childForm','width=300,height=200' );
+        //     }else{
+        //         pickColor = "";
+        //         window.name = "parentForm";
+        //         openWin = window.open('popup.html','childForm','width=300,height=200' );
 
-		function getColorchange(){
-			var pickColor = document.getElementById('pInput').innerText;
+        //     }
+            
+        //     // 3초후에 "hello"라는 alert 창 띄우기
+        //     setTimeout(function () {
+        //         alert("works!");
+        //         getColorchange();
+        //     }, 5000);
+
+		// }
+            setTimeout(4000);
+		// function getColorchange(){
+            // var pickColor = document.getElementById('colorS').value;
+            
+			// var pickColor = document.getElementById('pickColor').value;
 			console.log(pickColor);
 
 			var select = pickColor;
@@ -1216,16 +1252,16 @@
                     alert('잘못 입력 하셨습니다. ');
                     break;
             }
-
+        
             // *** 영상 처리 알고리즘 ***
             // var startColor=12, endColor=30; // 오렌지 8~30 : 0~360도
             // var startColor2=130, endColor2=150; // 오렌지 8~30 : 0~360도
             for (var i = 0; i < outH; i++) {
                 for (var k = 0; k < outW; k++) {
                     //문자 --> 숫자
-                    var R = outImage[0][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
-                    var G = outImage[1][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
-                    var B = outImage[2][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+                    var R = inImage[0][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+                    var G = inImage[1][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
+                    var B = inImage[2][i][k]; // 이상한 문자(꽯)를 숫자(231)로.
 
                     //RGB --> HSV
                     var hsv = rgb2hsv(R, G, B); // {h:120, s: 0.4, v:0.3}
@@ -1269,7 +1305,7 @@
                 }
             }
             displayImageA();
-			
+			// document.getElementById("pInput").innerText="";
 		}
 
 
@@ -1322,6 +1358,16 @@
 		function changeBrighteness() {
 			document.getElementById("rangediv").style.display = "block";
             document.getElementById("brighteness").style.display = "block";
+
+            document.getElementById("addrange").style.display = "none";
+            document.getElementById("bkrange").style.display = "none";
+            document.getElementById("gammarange").style.display = "none";
+            document.getElementById("andrange").style.display = "none";
+            document.getElementById("orrange").style.display = "none";
+            document.getElementById("zoomrange").style.display = "none";
+            document.getElementById("saturation").style.display = "none";
+            document.getElementById("xorrange").style.display = "none";
+            document.getElementById("rotate").style.display = "none";
 
 			// *** 영상 처리 알고리즘 ***
 			// var value = parseInt(prompt("숫자를 입력 : ", "128"));
@@ -2874,6 +2920,27 @@
 				<input type='button' id='inFile' value="이미지 열기" onclick="loadImage()" />
 			</div>
 			<ul class="filters-button-group tm-mb-40" >
+                <div id="colorSel">
+                <form id ="colorS">
+                    <p>-- 색상을 선택하세요 --</p>
+                    <ul>
+                        <li> <input type="radio" onclick="pickOrange(this.value)" id="pickColor" name="pickColor" value="red">
+                            <label for="red">빨강</label></li>
+                        <li><input type="radio" onclick="pickOrange(this.value)" id="pickColor" name="pickColor" value="orange">
+                            <label for="orange">오렌지</label></li>
+                        <li><input type="radio" onclick="pickOrange(this.value)" id="pickColor" name="pickColor" value="yellow">
+                            <label for="yellow">노랑</label></li>
+                        <li><input type="radio" onclick="pickOrange(this.value)" id="pickColor" name="pickColor" value="green">
+                            <label for="green">초록</label></li>
+                        <li><input type="radio" onclick="pickOrange(this.value)" id="pickColor" name="pickColor" value="blue">
+                            <label for="blue">파랑</label></li>
+                        <li><input type="radio" onclick="pickOrange(this.value)" id="pickColor" name="pickColor" value="purple">
+                            <label for="purple">보라</label><br></li>
+                    </ul>
+                    <!-- <input type="submit" value="전달하기" > -->
+                    <input type="button" id="clickme" value="닫기" >
+                </form>
+            </div>
 				<li>	
 					<select  id='imageAlgo' onchange="selectAlgorithm(this.form.imageAlgo)">
 						<option value=100> -- 선택하세요[화소점] -- </option>
@@ -3052,7 +3119,7 @@
 		</div>
 	</form>
 
-	<script src="js/jquery.min.js"></script>
+	<!-- <script src="js/jquery.min.js"></script> -->
 	<script src="js/imagesloaded.pkgd.min.js"></script>
 	<script src="js/isotope.pkgd.min.js"></script>
 	<script src="js/jquery.magnific-popup.min.js"></script>
